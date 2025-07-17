@@ -1,0 +1,1 @@
+This project explores tokenization for agglutinative low-resource languages. I used Finnish and Turkish as case studies, and efficacy was evaluated on NER data sets. For more information, visit <a href="https://jinfanhu.com/projects/tokenizationtf">my website</a>!
