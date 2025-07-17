@@ -1,0 +1,6 @@
+Running again to test after fixing bug of treating NER entities as OOV if not in word2vec vocab
+Used same 10k articles from Run 2.
+
+Future work: 
+* switch from logistic regression to something that is sequence aware
+* figure out how my current strategy of tokenizing NER can be fixed by using entity-level awareness

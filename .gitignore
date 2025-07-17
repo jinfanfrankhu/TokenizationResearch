@@ -1,0 +1,12 @@
+*/__pycache__/
+*.pyc
+
+/WikiDump/
+
+*/Finnish Tokenized/
+*/Finnish Word2Vec/
+*/Finnish10k/
+
+*/Turkish Tokenized/
+*/Turkish Word2Vec/
+*/Turkish10k/
