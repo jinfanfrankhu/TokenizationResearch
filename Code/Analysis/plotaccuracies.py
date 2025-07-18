@@ -87,24 +87,19 @@ def plot_confusion_matrix(data, lang, strat, save_dir):
 
     save_plot(fig, os.path.join(save_dir, "confusion_matrix.png"))
 
-# Define base output directory
+if __name__ == "__main__":
+    verbose = 1
+    # Loop through language and strategy combinations
+    for lang in LANGS:
+        for strategy in STRATEGIES:
+            output_directory = rf"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}\{lang} Evaluation\Plots"  # Change this to your desired output folder
+            file_path = fr"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}\{lang} Evaluation\{lang}_{strategy}_POS_results.json"  # Path to input JSON file
+            data = load_classification_data(file_path)
+            if data:  # Only process if file exists and is loaded
+                save_dir = os.path.join(output_directory, strategy)  # Define where to save plots
 
-# Define languages and tokenization strategies
-#languages = ["ZTurkish", "ZFinnish"]
-#strategies = ["Bigrams", "SUBWORDCORRECTEDBPE5k", "SUBWORDCORRECTEDBPE10k", "SUBWORDCORRECTEDBPE25k", "SUBWORDCORRECTEDBPE50k", "Char", "Trigrams", "Word"]
-
-verbose = 1
-# Loop through language and strategy combinations
-for lang in LANGS:
-    for strategy in STRATEGIES:
-        output_directory = rf"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}\{lang} Evaluation\Plots"  # Change this to your desired output folder
-        file_path = fr"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}\{lang} Evaluation\{lang}_{strategy}_POS_results.json"  # Path to input JSON file
-        data = load_classification_data(file_path)
-        if data:  # Only process if file exists and is loaded
-            save_dir = os.path.join(output_directory, strategy)  # Define where to save plots
-
-            plot_f1_scores(data, lang, strategy, save_dir)
-            plot_precision_vs_recall(data, lang, strategy, save_dir)
-            plot_confusion_matrix(data, lang, strategy, save_dir)
-            if verbose == 1:
-                print(f"Saved plots for {lang} - {strategy} in {save_dir}")
+                plot_f1_scores(data, lang, strategy, save_dir)
+                plot_precision_vs_recall(data, lang, strategy, save_dir)
+                plot_confusion_matrix(data, lang, strategy, save_dir)
+                if verbose == 1:
+                    print(f"Saved plots for {lang} - {strategy} in {save_dir}")

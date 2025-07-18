@@ -148,27 +148,28 @@ def save_results(accuracy, class_report, conf_matrix, class_labels, train_durati
         json.dump(results, f, indent=4)
 
     print(f"Results saved to {output_stats_path}")
+    
+if __name__ == "__main__":
+    for lang in LANGS:
+        for strategy in STRATEGIES:
+            model_path = fr"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}\{lang} Word2Vec"
+            train_file = fr"C:\Users\jinfa\Desktop\Research Dr. Mani\NERSets\{lang}train.conll"
+            test_file = fr"C:\Users\jinfa\Desktop\Research Dr. Mani\NERSets\{lang}test.conll"
+            
+            output_stats_path = fr"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}\{lang} Evaluation\{lang}_{strategy}_POS_results.json"
 
-for lang in LANGS:
-    for strategy in STRATEGIES:
-        model_path = fr"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}\{lang} Word2Vec"
-        train_file = fr"C:\Users\jinfa\Desktop\Research Dr. Mani\NERSets\{lang}train.conll"
-        test_file = fr"C:\Users\jinfa\Desktop\Research Dr. Mani\NERSets\{lang}test.conll"
-        
-        output_stats_path = fr"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}\{lang} Evaluation\{lang}_{strategy}_POS_results.json"
+            # Load Word2Vec model
+            w2v_model = load_word2vec()
 
-        # Load Word2Vec model
-        w2v_model = load_word2vec()
+            # Load and process dataset
+            print("Loading training data...")
+            train_sentences, train_pos_tags = load_conll_data(train_file)
+            tokenizer = get_tokenizer(strategy, lang, RUNNUMBER)
+            X_train, y_train = words_to_embeddings(train_sentences, train_pos_tags, w2v_model, tokenizer)
 
-        # Load and process dataset
-        print("Loading training data...")
-        train_sentences, train_pos_tags = load_conll_data(train_file)
-        tokenizer = get_tokenizer(strategy, lang, RUNNUMBER)
-        X_train, y_train = words_to_embeddings(train_sentences, train_pos_tags, w2v_model, tokenizer)
+            print("Loading testing data...")
+            test_sentences, test_pos_tags = load_conll_data(test_file)
+            X_test, y_test = words_to_embeddings(test_sentences, test_pos_tags, w2v_model, tokenizer)
 
-        print("Loading testing data...")
-        test_sentences, test_pos_tags = load_conll_data(test_file)
-        X_test, y_test = words_to_embeddings(test_sentences, test_pos_tags, w2v_model, tokenizer)
-
-        # Train and evaluate
-        train_logistic_regression(X_train, y_train, X_test, y_test)
+            # Train and evaluate
+            train_logistic_regression(X_train, y_train, X_test, y_test)

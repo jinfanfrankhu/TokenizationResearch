@@ -3,3 +3,4 @@
 3. Run tag.py to tag  
 4. Run plot.py for plots  
 5. Run changeoverrun.py for comparison
+6. Make sure to write in summary.txt some quick analyses
