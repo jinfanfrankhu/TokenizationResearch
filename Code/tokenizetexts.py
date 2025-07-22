@@ -29,7 +29,21 @@ def get_tokenizer(strategy, lang, runnumber):
             for text in examples["text"]:
                 tokenized.append([text[i:i+3] for i in range(len(text)-2)])
             return {"tokens": tokenized}
+        
+    elif strategy == "4grams":
+        def tokenize(examples):
+            tokenized = []
+            for text in examples["text"]:
+                tokenized.append([text[i:i+4] for i in range(len(text)-3)])
+            return {"tokens": tokenized}
 
+    elif strategy == "5grams":
+        def tokenize(examples):
+            tokenized = []
+            for text in examples["text"]:
+                tokenized.append([text[i:i+5] for i in range(len(text)-4)])
+            return {"tokens": tokenized}
+        
     elif strategy[0:3] == "BPE":
         vocabsize = int(strategy[3:-1])
         # Train and load BPE tokenizer
