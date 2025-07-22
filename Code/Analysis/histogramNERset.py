@@ -1,6 +1,9 @@
 import os
 import matplotlib.pyplot as plt
 from collections import defaultdict
+from Code.metasettings import LANGS
+
+output_folder = r"C:\Users\jinfa\Desktop\Research Dr. Mani\NER Histograms"
 
 def count_labels_from_conll(files):
     label_counts = defaultdict(int)
@@ -22,6 +25,8 @@ def count_labels_from_conll(files):
     return label_counts
 
 def plot_sorted_histogram(label_counts, lang):
+    os.makedirs(output_folder, exist_ok=True)
+
     sorted_items = sorted(label_counts.items(), key=lambda x: x[1], reverse=True)
     labels, counts = zip(*sorted_items)
 
@@ -36,21 +41,10 @@ def plot_sorted_histogram(label_counts, lang):
     plt.savefig(output_folder + fr"\{lang}_NER_label_distribution.png", dpi=300)
 
 # === Example usage ===
+if __name__ == "__main__":
+    for lang in LANGS:
+        print(f"Processing {lang} NER files...")
+        files = [rf"C:\Users\jinfa\Desktop\Research Dr. Mani\NERSets\{lang}.conll"]
 
-turkish_files = [
-    r"C:\Users\jinfa\Desktop\Research Dr. Mani\Evaluation\Turkishtest.conll",
-    r"C:\Users\jinfa\Desktop\Research Dr. Mani\Evaluation\Turkishtrain.conll"
-]
-
-finnish_files = [
-    r"C:\Users\jinfa\Desktop\Research Dr. Mani\Evaluation\Finnishtest.conll",
-    r"C:\Users\jinfa\Desktop\Research Dr. Mani\Evaluation\Finnishtrain.conll"
-]
-
-output_folder = rf"C:\Users\jinfa\Desktop\Research Dr. Mani\NERSetHistograms"
-
-turkish_counts = count_labels_from_conll(turkish_files)
-plot_sorted_histogram(turkish_counts, "Turkish")
-
-finnish_counts = count_labels_from_conll(finnish_files)
-plot_sorted_histogram(finnish_counts, "Finnish")
+        label_counts = count_labels_from_conll(files)
+        plot_sorted_histogram(label_counts, lang)
