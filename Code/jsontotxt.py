@@ -2,67 +2,70 @@ import json
 import random
 import os
 import re
+from Code.metasettings import LANGS, RUNNUMBER
 
 def sanitize_filename(name):
     """Replace invalid filename characters with an underscore."""
     return re.sub(r'[<>:"/\\|?*]', '_', name)
 
-def clean_text_content(text):
-    """Remove irrelevant content before '}}' if present."""
-    if '}}' in text:
-        return text.split('}}', 1)[-1].strip()
-    return text
-
-def sample_large_json_file(json_file_path, output_folder, sample_size=10000, min_size_kb=4):
-    valid_articles = []
-
-    # Open the JSON file and read line by line
-    with open(json_file_path, 'r', encoding='utf-8') as file:
-        for line in file:
-            try:
-                article = json.loads(line.strip())  # Parse each line as JSON
-                title = article.get("Title", "")
-                text = article.get("Cleaned_Text", "")
-
-                # Normalize title for consistent comparison
-                normalized_title = title.strip().lower()
-
-                # Exclude articles starting with "Kullanıcı mesaj" or "Keskustelu"
-                if not normalized_title.startswith("kullanıcı mesaj") and not normalized_title.startswith("keskustelu") and len(text.encode('utf-8')) > min_size_kb * 1024:
-                    article["Cleaned_Text"] = clean_text_content(text)  # Clean the text
-                    valid_articles.append(article)
-            except json.JSONDecodeError:
-                print("Skipping invalid JSON line.")
-
-
-    # Adjust sample size if there are fewer valid articles
-    sample_size = min(sample_size, len(valid_articles))
-
-    # Sample random articles from the valid ones
-    sampled_articles = random.sample(valid_articles, sample_size)
-
-    # Ensure the output folder exists
+def sample_10k_valid_articles(json_file_path, output_folder, target_count=10000, min_size_kb=4, min_threshold_kb=1):
     os.makedirs(output_folder, exist_ok=True)
+    saved_titles = set()
+    valid_count = 0
+    total_lines_read = 0
 
-    # Save each article as a separate .txt file
-    for idx, article in enumerate(sampled_articles):
-        title = article.get("Title", "No Title")
-        text = article.get("Cleaned_Text", "No Text")
+    while valid_count < target_count and min_size_kb >= min_threshold_kb:
+        new_articles_this_pass = 0
 
-        # Clean the title to create a valid filename
-        safe_title = sanitize_filename("_".join(title.split())[:50])  # Limit to 50 characters
-        filename = f"article_{idx+1}_{safe_title}.txt"
-        file_path = os.path.join(output_folder, filename)
+        with open(json_file_path, 'r', encoding='utf-8') as file:
+            for line in file:
+                total_lines_read += 1
+                try:
+                    article = json.loads(line.strip())
+                    title = article.get("Title", "").strip()
+                    text = article.get("Cleaned_Text", "").strip()
 
-        # Write the article to the .txt file
-        with open(file_path, 'w', encoding='utf-8') as output_file:
-            output_file.write(f"Title: {title}\n{text}\n")
+                    # Skip empty or duplicate titles
+                    if not title or not text or title in saved_titles:
+                        continue
 
-    print(f"Sampled articles saved as separate .txt files in {output_folder}")
+                    # Size filter
+                    if len(text.encode('utf-8')) < min_size_kb * 1024:
+                        continue
 
-# Specify your file paths and folder
-json_file_path = r"C:\Users\jinfa\OneDrive\Desktop\Research Dr. Mani\WikiDump\turkish.json"
-output_folder = r"C:\Users\jinfa\OneDrive\Desktop\Research Dr. Mani\ZTurkish10k"
+                    # Save article
+                    safe_title = sanitize_filename("_".join(title.split())[:50])
+                    filename = f"article_{valid_count+1}_{safe_title}.txt"
+                    file_path = os.path.join(output_folder, filename)
 
-# Call the function
-sample_large_json_file(json_file_path, output_folder)
+                    with open(file_path, 'w', encoding='utf-8') as output_file:
+                        output_file.write(f"Title: {title}\n{text}\n")
+
+                    saved_titles.add(title)
+                    valid_count += 1
+                    new_articles_this_pass += 1
+
+                    if valid_count >= target_count:
+                        break
+
+                except json.JSONDecodeError:
+                    continue
+
+        if new_articles_this_pass == 0:
+            min_size_kb -= 1
+            print(f"⚠️ No new articles found. Lowering min_size_kb to {min_size_kb} and restarting...")
+        else:
+            print(f"✅ Added {new_articles_this_pass} articles this pass (min_size_kb={min_size_kb}) — {valid_count} total.")
+
+    if valid_count < target_count:
+        print(f"⚠️ Finished with {valid_count} articles. Could not reach 10k even after lowering size threshold.")
+    else:
+        print(f"🎉 Success! Saved {valid_count} valid articles to: {output_folder}")
+
+
+# Main script
+if __name__ == "__main__":
+    for lang in LANGS:
+        json_file_path = fr"C:\Users\jinfa\Desktop\Research Dr. Mani\WikiDump\{lang}.jsonl"
+        output_folder = fr"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}\{lang}10k"
+        sample_10k_valid_articles(json_file_path, output_folder)
