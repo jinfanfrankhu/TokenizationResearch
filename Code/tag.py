@@ -8,6 +8,7 @@ from gensim.models import Word2Vec
 import time
 import youtokentome as yttm
 
+from Code.tokenizetexts import get_tokenizer
 from metasettings import LANGS, STRATEGIES, RUNNUMBER
 
 # Load Word2Vec model
@@ -40,29 +41,6 @@ def load_conll_data(file_path):
                     tags = []
 
     return sentences, pos_tags
-
-def get_tokenizer(strategy, lang, runnumber):
-    if strategy == "Word":
-        return lambda s: s.split()
-
-    elif strategy == "Char":
-        return list
-
-    elif strategy == "Bigrams":
-        return lambda s: [s[i:i+2] for i in range(len(s) - 1)]
-
-    elif strategy == "Trigrams":
-        return lambda s: [s[i:i+3] for i in range(len(s) - 2)]
-
-    elif strategy.startswith("BPE"):
-        vocabsize = int(strategy[3:-1])
-        model_path = rf"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {runnumber}\{lang} Tokenized\{strategy}\bpe_tokenizer_{vocabsize}.model"
-        tokenizer = yttm.BPE(model=model_path)
-
-        return lambda s: tokenizer.encode([s], output_type=yttm.OutputType.SUBWORD)[0]
-
-    else:
-        raise ValueError(f"Unknown strategy: {strategy}")
 
 # Propagate tags through tokenizer
 def propagate_tags(words, tags, tokenizer):

@@ -98,7 +98,7 @@ def tokenize_and_train(lang, strategy, runnumber):
 
 
 if __name__ == "__main__":
-    from metasettings import LANGS, STRATEGIES, RUNNUMBER
+    from Code.metasettings import LANGS, STRATEGIES, RUNNUMBER
 
     for lang in LANGS:
         for strategy in STRATEGIES:
