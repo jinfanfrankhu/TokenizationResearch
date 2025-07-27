@@ -11,7 +11,7 @@ import youtokentome as yttm
 from collections import defaultdict
 
 from Code.tokenizetexts import get_tokenizer
-from metasettings import LANGS, STRATEGIES, RUNNUMBER
+from Code.metasettings import LANGS, STRATEGIES, RUNNUMBER
 
 # Load Word2Vec model
 def load_word2vec():
