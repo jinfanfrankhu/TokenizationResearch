@@ -4,7 +4,7 @@ import json
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
-from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.model_selection import KFold
 from gensim.models import Word2Vec
 import time
 import youtokentome as yttm
@@ -117,20 +117,14 @@ if __name__ == "__main__":
             sentences, tags = load_conll_data(conll_file)
             tokenizer = get_tokenizer(strategy, lang, RUNNUMBER)
 
-            sss = StratifiedShuffleSplit(n_splits=5, test_size=0.2, random_state=42)
-
-            # use majority tag in sentence as label for stratification
-            def get_label(seq):
-                return max(set(seq), key=seq.count)
-
-            labels = [get_label(t) for t in tags]
+            kf = KFold(n_splits=5, shuffle=True, random_state=42)
 
             merged_report = defaultdict(lambda: {"precision": 0, "recall": 0, "f1-score": 0, "support": 0})
             total_accuracy = 0.0
             total_duration = 0.0
             total_epochs = 0
 
-            for fold, (train_idx, test_idx) in enumerate(sss.split(sentences, labels)):
+            for fold, (train_idx, test_idx) in enumerate(kf.split(sentences)):
                 print(f"\n--- Fold {fold+1} ---")
                 train_sent = [sentences[i] for i in train_idx]
                 train_tags = [tags[i] for i in train_idx]
