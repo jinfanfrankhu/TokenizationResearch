@@ -13,6 +13,14 @@ from collections import defaultdict
 from Code.tokenizetexts import get_tokenizer
 from Code.metasettings import LANGS, STRATEGIES, RUNNUMBER
 
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--mode", choices=["test", "full"], default="full")
+args = parser.parse_args()
+
+TEST_MODE = args.mode == "test"
+
 # Load Word2Vec model
 def load_word2vec():
     model_file = os.path.join(model_path, f"{lang}_{strategy}_word2vec.model")
@@ -50,7 +58,7 @@ def propagate_tags(words, tags, tokenizer):
     new_tags = []
 
     for word, tag in zip(words, tags):
-        subtokens = tokenizer(word)
+        subtokens = tokenizer({"text": [word]})["tokens"][0]
         new_tokens.extend(subtokens)
         new_tags.extend([tag] * len(subtokens))
 
@@ -82,7 +90,12 @@ def train_logistic_regression(X_train, y_train, X_test, y_test):
 
     print("Training Logistic Regression...")
     start_time = time.time()
-    model = LogisticRegression(max_iter=500, solver="saga", verbose=1, n_jobs=-1)
+    model = LogisticRegression(
+        max_iter=1 if TEST_MODE else 500,
+        solver="saga",
+        verbose=1,
+        n_jobs=-1
+    )
     model.fit(X_train, y_train_encoded)
     end_time = time.time()
 
@@ -96,13 +109,23 @@ def train_logistic_regression(X_train, y_train, X_test, y_test):
 
     accuracy = accuracy_score(y_test_encoded, y_pred)
     class_report = classification_report(
-        y_test_encoded, y_pred, target_names=label_encoder.classes_, output_dict=True
+        y_test_encoded,
+        y_pred,
+        labels=np.arange(len(label_encoder.classes_)),
+        target_names=label_encoder.classes_,
+        output_dict=True,
+        zero_division=0  # optional: suppress divide-by-zero warnings
     )
     conf_matrix = confusion_matrix(y_test_encoded, y_pred)
 
     print(f"Accuracy: {accuracy:.4f}")
-    print(classification_report(y_test_encoded, y_pred, target_names=label_encoder.classes_))
-
+    print(classification_report(
+        y_test_encoded,
+        y_pred,
+        labels=np.arange(len(label_encoder.classes_)),
+        target_names=label_encoder.classes_,
+        zero_division=0
+    ))
     return accuracy, class_report, conf_matrix, label_encoder.classes_, train_duration, n_epochs
 
 # Main logic
@@ -119,7 +142,14 @@ if __name__ == "__main__":
 
             kf = KFold(n_splits=5, shuffle=True, random_state=42)
 
+            label_encoder = LabelEncoder()
+            label_encoder.fit([tag for seq in tags for tag in seq])
+            all_labels = label_encoder.classes_
+
             merged_report = defaultdict(lambda: {"precision": 0, "recall": 0, "f1-score": 0, "support": 0})
+            for label in all_labels:
+                merged_report[label]  # ensure it's initialized even if never seen
+
             total_accuracy = 0.0
             total_duration = 0.0
             total_epochs = 0
@@ -151,9 +181,9 @@ if __name__ == "__main__":
             for label, metrics in merged_report.items():
                 support = metrics["support"]
                 final_report[label] = {
-                    "precision": metrics["precision"] / support,
-                    "recall": metrics["recall"] / support,
-                    "f1-score": metrics["f1-score"] / support,
+                    "precision": metrics["precision"] / support if support > 0 else 0.0,
+                    "recall": metrics["recall"] / support if support > 0 else 0.0,
+                    "f1-score": metrics["f1-score"] / support if support > 0 else 0.0,
                     "support": support
                 }
 

@@ -44,22 +44,29 @@ def get_tokenizer(strategy, lang, runnumber):
                 tokenized.append([text[i:i+5] for i in range(len(text)-4)])
             return {"tokens": tokenized}
         
-    elif strategy[0:3] == "BPE":
+    elif strategy.startswith("BPE"):
         vocabsize = int(strategy[3:-1])
-        # Train and load BPE tokenizer
+
         input_path = rf"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {runnumber}\{lang}10k"
         output_path = rf"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {runnumber}\{lang} Tokenized\{strategy}"
+        os.makedirs(output_path, exist_ok=True)
+
         train_file_path = os.path.join(output_path, "train_corpus.txt")
-
-        with open(train_file_path, "w", encoding="utf-8") as f:
-            for file in os.listdir(input_path):
-                if file.startswith("article_") and file.endswith(".txt"):
-                    with open(os.path.join(input_path, file), "r", encoding="utf-8") as infile:
-                        for line in infile:
-                            f.write(line.strip() + "\n")
-
         model_path = os.path.join(output_path, f"bpe_tokenizer_{vocabsize}.model")
-        yttm.BPE.train(data=train_file_path, vocab_size=vocabsize * 1000, model=model_path)
+
+        # Only create training file and train if the model doesn't already exist
+        if not os.path.exists(model_path):
+            print("Training BPE tokenizer...")
+            with open(train_file_path, "w", encoding="utf-8") as f:
+                for file in os.listdir(input_path):
+                    if file.startswith("article_") and file.endswith(".txt"):
+                        with open(os.path.join(input_path, file), "r", encoding="utf-8") as infile:
+                            for line in infile:
+                                f.write(line.strip() + "\n")
+            yttm.BPE.train(data=train_file_path, vocab_size=vocabsize * 1000, model=model_path)
+        else:
+            print(f"Loading existing BPE tokenizer from: {model_path}")
+
         tokenizer = yttm.BPE(model=model_path)
 
         def tokenize(examples):
