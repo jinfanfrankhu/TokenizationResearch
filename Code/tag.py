@@ -4,9 +4,11 @@ import json
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
+from sklearn.model_selection import StratifiedShuffleSplit
 from gensim.models import Word2Vec
 import time
 import youtokentome as yttm
+from collections import defaultdict
 
 from Code.tokenizetexts import get_tokenizer
 from metasettings import LANGS, STRATEGIES, RUNNUMBER
@@ -27,13 +29,13 @@ def load_conll_data(file_path):
     with open(file_path, "r", encoding="utf-8") as file:
         for line in file:
             line = line.strip()
-            if line:  # Token and tag are present
+            if line:
                 parts = line.split("\t")
                 if len(parts) == 2:
                     word, tag = parts
                     sentence.append(word)
                     tags.append(tag)
-            else:  # Sentence boundary
+            else:
                 if sentence:
                     sentences.append(sentence)
                     pos_tags.append(tags)
@@ -44,10 +46,6 @@ def load_conll_data(file_path):
 
 # Propagate tags through tokenizer
 def propagate_tags(words, tags, tokenizer):
-    """
-    Given original words and their tags, apply the tokenizer
-    and propagate each tag to the tokens it produces.
-    """
     new_tokens = []
     new_tags = []
 
@@ -96,58 +94,85 @@ def train_logistic_regression(X_train, y_train, X_test, y_test):
     print("Evaluating model...")
     y_pred = model.predict(X_test)
 
-    # Compute performance metrics
     accuracy = accuracy_score(y_test_encoded, y_pred)
-    class_report = classification_report(y_test_encoded, y_pred, target_names=label_encoder.classes_, output_dict=True)
+    class_report = classification_report(
+        y_test_encoded, y_pred, target_names=label_encoder.classes_, output_dict=True
+    )
     conf_matrix = confusion_matrix(y_test_encoded, y_pred)
 
-    # Print results
     print(f"Accuracy: {accuracy:.4f}")
     print(classification_report(y_test_encoded, y_pred, target_names=label_encoder.classes_))
 
-    # Save results to file
-    save_results(accuracy, class_report, conf_matrix, label_encoder.classes_, train_duration, n_epochs)
+    return accuracy, class_report, conf_matrix, label_encoder.classes_, train_duration, n_epochs
 
-# Save evaluation results to a file
-def save_results(accuracy, class_report, conf_matrix, class_labels, train_duration, n_epochs):
-    results = {
-        "accuracy": accuracy,
-        "classification_report": class_report,
-        "confusion_matrix": conf_matrix.tolist(),
-        "labels": class_labels.tolist(),
-        "training_duration_seconds": train_duration,
-        "epochs": n_epochs
-    }
-
-    # Ensure the output directory exists
-    os.makedirs(os.path.dirname(output_stats_path), exist_ok=True)
-
-    with open(output_stats_path, "w", encoding="utf-8") as f:
-        json.dump(results, f, indent=4)
-
-    print(f"Results saved to {output_stats_path}")
-    
+# Main logic
 if __name__ == "__main__":
     for lang in LANGS:
         for strategy in STRATEGIES:
             model_path = fr"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}\{lang} Word2Vec"
-            train_file = fr"C:\Users\jinfa\Desktop\Research Dr. Mani\NERSets\{lang}train.conll"
-            test_file = fr"C:\Users\jinfa\Desktop\Research Dr. Mani\NERSets\{lang}test.conll"
-            
+            conll_file = fr"C:\Users\jinfa\Desktop\Research Dr. Mani\NERSets\{lang}.conll"
             output_stats_path = fr"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}\{lang} Evaluation\{lang}_{strategy}_POS_results.json"
 
-            # Load Word2Vec model
             w2v_model = load_word2vec()
-
-            # Load and process dataset
-            print("Loading training data...")
-            train_sentences, train_pos_tags = load_conll_data(train_file)
+            sentences, tags = load_conll_data(conll_file)
             tokenizer = get_tokenizer(strategy, lang, RUNNUMBER)
-            X_train, y_train = words_to_embeddings(train_sentences, train_pos_tags, w2v_model, tokenizer)
 
-            print("Loading testing data...")
-            test_sentences, test_pos_tags = load_conll_data(test_file)
-            X_test, y_test = words_to_embeddings(test_sentences, test_pos_tags, w2v_model, tokenizer)
+            sss = StratifiedShuffleSplit(n_splits=5, test_size=0.2, random_state=42)
 
-            # Train and evaluate
-            train_logistic_regression(X_train, y_train, X_test, y_test)
+            # use majority tag in sentence as label for stratification
+            def get_label(seq):
+                return max(set(seq), key=seq.count)
+
+            labels = [get_label(t) for t in tags]
+
+            merged_report = defaultdict(lambda: {"precision": 0, "recall": 0, "f1-score": 0, "support": 0})
+            total_accuracy = 0.0
+            total_duration = 0.0
+            total_epochs = 0
+
+            for fold, (train_idx, test_idx) in enumerate(sss.split(sentences, labels)):
+                print(f"\n--- Fold {fold+1} ---")
+                train_sent = [sentences[i] for i in train_idx]
+                train_tags = [tags[i] for i in train_idx]
+                test_sent = [sentences[i] for i in test_idx]
+                test_tags = [tags[i] for i in test_idx]
+
+                X_train, y_train = words_to_embeddings(train_sent, train_tags, w2v_model, tokenizer)
+                X_test, y_test = words_to_embeddings(test_sent, test_tags, w2v_model, tokenizer)
+
+                acc, report, conf_matrix, classes, duration, epochs = train_logistic_regression(X_train, y_train, X_test, y_test)
+                total_accuracy += acc
+                total_duration += duration
+                total_epochs += epochs if isinstance(epochs, int) else 0
+
+                for label, scores in report.items():
+                    if label in ("accuracy", "macro avg", "weighted avg"):
+                        continue
+                    for metric in ["precision", "recall", "f1-score"]:
+                        merged_report[label][metric] += scores[metric] * scores["support"]
+                    merged_report[label]["support"] += scores["support"]
+
+            # Average and finalize
+            final_report = {}
+            for label, metrics in merged_report.items():
+                support = metrics["support"]
+                final_report[label] = {
+                    "precision": metrics["precision"] / support,
+                    "recall": metrics["recall"] / support,
+                    "f1-score": metrics["f1-score"] / support,
+                    "support": support
+                }
+
+            results = {
+                "average_accuracy": total_accuracy / 5,
+                "classification_report": final_report,
+                "training_duration_seconds": total_duration,
+                "average_epochs": total_epochs // 5 if total_epochs > 0 else "N/A",
+                "labels": list(final_report.keys())
+            }
+
+            os.makedirs(os.path.dirname(output_stats_path), exist_ok=True)
+            with open(output_stats_path, "w", encoding="utf-8") as f:
+                json.dump(results, f, indent=4)
+
+            print(f"\nResults saved to {output_stats_path}")
