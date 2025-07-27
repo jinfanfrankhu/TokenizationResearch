@@ -102,9 +102,9 @@ if __name__ == "__main__":
     for lang in LANGS:
         for strategy in STRATEGIES:
             # Check if old file exists
-            if os.path.exists(f"C:\\Users\\jinfa\\Desktop\\Research Dr. Mani\\{lang} Run {RUNNUMBER}\\{lang} Evaluation\\{lang}_{strategy}_POS_results.json") and os.path.exists(f"C:\\Users\\jinfa\\Desktop\\Research Dr. Mani\\{lang} Run {RUNNUMBER-1}\\{lang} Evaluation\\{lang}_{strategy}_POS_results.json"):
+            if os.path.exists(f"C:\\Users\\jinfa\\Desktop\\Research Dr. Mani\\{lang} Run {RUNNUMBER}\\{lang} Evaluation\\{lang}_{strategy}_NER_results.json") and os.path.exists(f"C:\\Users\\jinfa\\Desktop\\Research Dr. Mani\\{lang} Run {RUNNUMBER-1}\\{lang} Evaluation\\{lang}_{strategy}_POS_results.json"):
                 old_json_path = f"C:\\Users\\jinfa\\Desktop\\Research Dr. Mani\\{lang} Run {RUNNUMBER-1}\\{lang} Evaluation\\{lang}_{strategy}_POS_results.json"
-                new_json_path = f"C:\\Users\\jinfa\\Desktop\\Research Dr. Mani\\{lang} Run {RUNNUMBER}\\{lang} Evaluation\\{lang}_{strategy}_POS_results.json"
+                new_json_path = f"C:\\Users\\jinfa\\Desktop\\Research Dr. Mani\\{lang} Run {RUNNUMBER}\\{lang} Evaluation\\{lang}_{strategy}_NER_results.json"
             else:
                 continue
 

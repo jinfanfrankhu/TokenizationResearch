@@ -9,9 +9,10 @@ from gensim.models import Word2Vec
 import time
 import youtokentome as yttm
 from collections import defaultdict
+import pickle
 
 from Code.tokenizetexts import get_tokenizer
-from Code.metasettings import LANGS, STRATEGIES, RUNNUMBER
+from Code.metasettings import LANGS, STRATEGIES, RUNNUMBER, TEST_STRATEGIES, TEST_LANGS
 
 import argparse
 
@@ -30,15 +31,16 @@ def load_word2vec():
 # Parse CoNLL files
 def load_conll_data(file_path):
     sentences = []
-    pos_tags = []
+    ner_tags = []
     sentence = []
     tags = []
 
     with open(file_path, "r", encoding="utf-8") as file:
         for line in file:
+            #print("Processing line:" + line.strip())
             line = line.strip()
             if line:
-                parts = line.split("\t")
+                parts = line.split()
                 if len(parts) == 2:
                     word, tag = parts
                     sentence.append(word)
@@ -46,11 +48,16 @@ def load_conll_data(file_path):
             else:
                 if sentence:
                     sentences.append(sentence)
-                    pos_tags.append(tags)
+                    ner_tags.append(tags)
                     sentence = []
                     tags = []
 
-    return sentences, pos_tags
+    # Patch: handle no trailing blank line
+    if sentence:
+        sentences.append(sentence)
+        ner_tags.append(tags)
+
+    return sentences, ner_tags
 
 # Propagate tags through tokenizer
 def propagate_tags(words, tags, tokenizer):
@@ -65,11 +72,11 @@ def propagate_tags(words, tags, tokenizer):
     return new_tokens, new_tags
 
 # Convert words to embeddings
-def words_to_embeddings(sentences, pos_tags, w2v_model, tokenizer):
+def words_to_embeddings(sentences, ner_tags, w2v_model, tokenizer):
     X = []
     y = []
 
-    for words, tags in zip(sentences, pos_tags):
+    for words, tags in zip(sentences, ner_tags):
         tokens, aligned_tags = propagate_tags(words, tags, tokenizer)
 
         for token, tag in zip(tokens, aligned_tags):
@@ -83,7 +90,7 @@ def words_to_embeddings(sentences, pos_tags, w2v_model, tokenizer):
 
 # Train and evaluate Logistic Regression model
 def train_logistic_regression(X_train, y_train, X_test, y_test):
-    print("Encoding POS tags...")
+    print("Encoding NER tags...")
     label_encoder = LabelEncoder()
     y_train_encoded = label_encoder.fit_transform(y_train)
     y_test_encoded = label_encoder.transform(y_test)
@@ -128,41 +135,154 @@ def train_logistic_regression(X_train, y_train, X_test, y_test):
     ))
     return accuracy, class_report, conf_matrix, label_encoder.classes_, train_duration, n_epochs
 
-# Main logic
+def cache_tokenized_sentences(lang, strategy, runnumber, sentences, tags, tokenizer):
+    cache_dir = os.path.join("cache", f"{lang}_{strategy}_run{runnumber}")
+    os.makedirs(cache_dir, exist_ok=True)
+    cache_file = os.path.join(cache_dir, "tokenized.pkl")
+
+    if os.path.exists(cache_file):
+        print("Loading cached tokenized sentences...")
+        with open(cache_file, "rb") as f:
+            return pickle.load(f)
+
+    print("Tokenizing and caching sentences...")
+    tokenized_data = []
+    for words, tags_seq in zip(sentences, tags):
+        tokens, aligned_tags = propagate_tags(words, tags_seq, tokenizer)
+        tokenized_data.append((tokens, aligned_tags))
+
+    with open(cache_file, "wb") as f:
+        pickle.dump(tokenized_data, f)
+    
+    return tokenized_data
+
+def cache_embeddings(lang, strategy, runnumber, tokenized_data, w2v_model):
+    cache_dir = os.path.join("cache", f"{lang}_{strategy}_run{runnumber}")
+    os.makedirs(cache_dir, exist_ok=True)
+    cache_file = os.path.join(cache_dir, "embeddings.pkl")
+
+    if os.path.exists(cache_file):
+        print("Loading cached embeddings...")
+        with open(cache_file, "rb") as f:
+            return pickle.load(f)
+
+    print("Computing and caching embeddings...")
+    all_embeddings = []
+    all_tags = []
+
+    for tokens, tags_seq in tokenized_data:
+        # Handle empty sentences
+        if not tokens:
+            print(f"Warning: Empty sentence found, skipping...")
+            continue
+            
+        sentence_embeddings = []
+        for token in tokens:
+            if token in w2v_model.wv:
+                sentence_embeddings.append(w2v_model.wv[token])
+            else:
+                sentence_embeddings.append(np.zeros(w2v_model.vector_size))
+        
+        # Ensure consistent 2D shape: (num_tokens, embedding_dim)
+        embeddings_array = np.array(sentence_embeddings)
+        if embeddings_array.ndim == 1 and len(sentence_embeddings) == 1:
+            # Single token case: reshape from (embedding_dim,) to (1, embedding_dim)
+            embeddings_array = embeddings_array.reshape(1, -1)
+        elif embeddings_array.ndim == 0:
+            # Empty case: create proper empty 2D array
+            embeddings_array = np.empty((0, w2v_model.vector_size))
+            
+        all_embeddings.append(embeddings_array)
+        all_tags.append(np.array(tags_seq))
+
+    cached_data = (all_embeddings, all_tags)
+    with open(cache_file, "wb") as f:
+        pickle.dump(cached_data, f)
+
+    return cached_data
+
+def safe_concatenate_embeddings(embeddings_list, tags_list, indices):
+    """Safely concatenate embeddings handling dimension mismatches"""
+    valid_embeddings = []
+    valid_tags = []
+    
+    for i in indices:
+        emb = embeddings_list[i]
+        tag = tags_list[i]
+        
+        # Skip empty sentences
+        if emb.size == 0:
+            continue
+            
+        # Ensure 2D shape
+        if emb.ndim == 1:
+            emb = emb.reshape(1, -1)
+        elif emb.ndim == 0:
+            continue  # Skip scalar/empty
+            
+        valid_embeddings.append(emb)
+        valid_tags.append(tag)
+    
+    if not valid_embeddings:
+        # Find embedding dimension from any non-empty embedding in the list
+        embedding_dim = None
+        for emb in embeddings_list:
+            if emb.size > 0:
+                embedding_dim = emb.shape[-1]
+                break
+        
+        # Fallback if all embeddings are empty (shouldn't happen in practice)
+        if embedding_dim is None:
+            embedding_dim = 100  # Default Word2Vec dimension
+            
+        return np.empty((0, embedding_dim)), np.array([])
+    
+    return np.concatenate(valid_embeddings), np.concatenate(valid_tags)
+
 if __name__ == "__main__":
-    for lang in LANGS:
-        for strategy in STRATEGIES:
-            model_path = fr"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}\{lang} Word2Vec"
-            conll_file = fr"C:\Users\jinfa\Desktop\Research Dr. Mani\NERSets\{lang}.conll"
-            output_stats_path = fr"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}\{lang} Evaluation\{lang}_{strategy}_POS_results.json"
+    langs_to_run = TEST_LANGS if TEST_MODE else LANGS
+    for lang in langs_to_run:
+        strategies_to_run = TEST_STRATEGIES if TEST_MODE else STRATEGIES
+
+        # Load once per language
+        model_path_base = fr"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}"
+        conll_file = fr"C:\Users\jinfa\Desktop\Research Dr. Mani\NERSets\{lang}.conll"
+        sentences, tags = load_conll_data(conll_file)
+
+        if len(sentences) < 5:
+            print(f"Skipping {lang} due to insufficient data ({len(sentences)} sentences).")
+            continue
+
+        label_encoder = LabelEncoder()
+        label_encoder.fit([tag for seq in tags for tag in seq])
+        all_labels = label_encoder.classes_
+
+        # Shared folds
+        kf = KFold(n_splits=3, shuffle=True, random_state=42)
+        fold_indices = list(kf.split(sentences))
+
+        for strategy in strategies_to_run:
+            model_path = os.path.join(model_path_base, f"{lang} Word2Vec")
+            output_stats_path = os.path.join(model_path_base, f"{lang} Evaluation", f"{lang}_{strategy}_NER_results.json")
 
             w2v_model = load_word2vec()
-            sentences, tags = load_conll_data(conll_file)
             tokenizer = get_tokenizer(strategy, lang, RUNNUMBER)
-
-            kf = KFold(n_splits=5, shuffle=True, random_state=42)
-
-            label_encoder = LabelEncoder()
-            label_encoder.fit([tag for seq in tags for tag in seq])
-            all_labels = label_encoder.classes_
-
+            tokenized_data = cache_tokenized_sentences(lang, strategy, RUNNUMBER, sentences, tags, tokenizer)
+            embeddings_by_sentence, tags_by_sentence = cache_embeddings(lang, strategy, RUNNUMBER, tokenized_data, w2v_model)
             merged_report = defaultdict(lambda: {"precision": 0, "recall": 0, "f1-score": 0, "support": 0})
-            for label in all_labels:
-                merged_report[label]  # ensure it's initialized even if never seen
 
             total_accuracy = 0.0
             total_duration = 0.0
             total_epochs = 0
 
-            for fold, (train_idx, test_idx) in enumerate(kf.split(sentences)):
+            for fold, (train_idx, test_idx) in enumerate(fold_indices):
                 print(f"\n--- Fold {fold+1} ---")
-                train_sent = [sentences[i] for i in train_idx]
-                train_tags = [tags[i] for i in train_idx]
-                test_sent = [sentences[i] for i in test_idx]
-                test_tags = [tags[i] for i in test_idx]
 
-                X_train, y_train = words_to_embeddings(train_sent, train_tags, w2v_model, tokenizer)
-                X_test, y_test = words_to_embeddings(test_sent, test_tags, w2v_model, tokenizer)
+                valid_train_idx = [i for i in train_idx if i < len(embeddings_by_sentence)]
+                valid_test_idx = [i for i in test_idx if i < len(embeddings_by_sentence)]
+                
+                X_train, y_train = safe_concatenate_embeddings(embeddings_by_sentence, tags_by_sentence, valid_train_idx)
+                X_test, y_test = safe_concatenate_embeddings(embeddings_by_sentence, tags_by_sentence, valid_test_idx)
 
                 acc, report, conf_matrix, classes, duration, epochs = train_logistic_regression(X_train, y_train, X_test, y_test)
                 total_accuracy += acc
@@ -188,10 +308,10 @@ if __name__ == "__main__":
                 }
 
             results = {
-                "average_accuracy": total_accuracy / 5,
+                "average_accuracy": total_accuracy / 3,
                 "classification_report": final_report,
                 "training_duration_seconds": total_duration,
-                "average_epochs": total_epochs // 5 if total_epochs > 0 else "N/A",
+                "average_epochs": total_epochs // 3 if total_epochs > 0 else "N/A",
                 "labels": list(final_report.keys())
             }
 

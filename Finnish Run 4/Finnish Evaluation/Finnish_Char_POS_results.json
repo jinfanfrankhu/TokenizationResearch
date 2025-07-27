@@ -1,0 +1,100 @@
+{
+    "average_accuracy": 0.7264649185804334,
+    "classification_report": {
+        "B-DATE": {
+            "precision": 0.2711819935885553,
+            "recall": 0.05386875612144956,
+            "f1-score": 0.0798499335609876,
+            "support": 6126.0
+        },
+        "B-EVENT": {
+            "precision": 0.08106935752161966,
+            "recall": 0.008032128514056224,
+            "f1-score": 0.014536427270597603,
+            "support": 1245.0
+        },
+        "B-LOC": {
+            "precision": 0.30413646016518425,
+            "recall": 0.044964479732553284,
+            "f1-score": 0.07796611267532592,
+            "support": 11965.0
+        },
+        "B-ORG": {
+            "precision": 0.2579404188714749,
+            "recall": 0.04353597026811787,
+            "f1-score": 0.07301696059852475,
+            "support": 7534.0
+        },
+        "B-PER": {
+            "precision": 0.29668510006171417,
+            "recall": 0.08866071428571429,
+            "f1-score": 0.13564543977367202,
+            "support": 11200.0
+        },
+        "B-PRO": {
+            "precision": 0.4775824868386853,
+            "recall": 0.05387205387205387,
+            "f1-score": 0.0878694534951879,
+            "support": 2970.0
+        },
+        "I-DATE": {
+            "precision": 0.4630805159851137,
+            "recall": 0.44327117501685015,
+            "f1-score": 0.42783730075221404,
+            "support": 4451.0
+        },
+        "I-EVENT": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 1623.0
+        },
+        "I-LOC": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 1255.0
+        },
+        "I-ORG": {
+            "precision": 0.0440272968135262,
+            "recall": 0.0030341743851804537,
+            "f1-score": 0.005460522322240143,
+            "support": 6262.0
+        },
+        "I-PER": {
+            "precision": 0.2785515958983908,
+            "recall": 0.007653910149750416,
+            "f1-score": 0.014653660950018212,
+            "support": 6010.0
+        },
+        "I-PRO": {
+            "precision": 0.27849025583591547,
+            "recall": 0.025946995976134313,
+            "f1-score": 0.044441437861977115,
+            "support": 7207.0
+        },
+        "O": {
+            "precision": 0.7516959365502751,
+            "recall": 0.9860389102352348,
+            "f1-score": 0.852973431052638,
+            "support": 172551.0
+        }
+    },
+    "training_duration_seconds": 15.806524515151978,
+    "average_epochs": 1,
+    "labels": [
+        "B-DATE",
+        "B-EVENT",
+        "B-LOC",
+        "B-ORG",
+        "B-PER",
+        "B-PRO",
+        "I-DATE",
+        "I-EVENT",
+        "I-LOC",
+        "I-ORG",
+        "I-PER",
+        "I-PRO",
+        "O"
+    ]
+}

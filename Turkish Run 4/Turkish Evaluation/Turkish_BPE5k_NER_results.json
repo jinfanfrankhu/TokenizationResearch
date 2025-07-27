@@ -1,242 +1,242 @@
 {
-    "average_accuracy": 0.6593761453741851,
+    "average_accuracy": 0.6469040641248712,
     "classification_report": {
         "B-CARDINAL": {
             "precision": 0.0,
             "recall": 0.0,
             "f1-score": 0.0,
-            "support": 11530.0
+            "support": 10683.0
         },
         "B-DATE": {
-            "precision": 0.47584123943008066,
-            "recall": 0.7377857463021067,
-            "f1-score": 0.5785299501730788,
-            "support": 26772.0
+            "precision": 0.45807074600974,
+            "recall": 0.7368656582833617,
+            "f1-score": 0.564918643059728,
+            "support": 22346.0
         },
         "B-EVENT": {
             "precision": 0.0,
             "recall": 0.0,
             "f1-score": 0.0,
-            "support": 12762.0
+            "support": 10610.0
         },
         "B-FAC": {
             "precision": 0.0,
             "recall": 0.0,
             "f1-score": 0.0,
-            "support": 5869.0
+            "support": 4715.0
         },
         "B-GPE": {
-            "precision": 0.22845860559556272,
-            "recall": 0.06771054836007474,
-            "f1-score": 0.09379206443452918,
-            "support": 77595.0
+            "precision": 0.24312495333592327,
+            "recall": 0.12356902919598242,
+            "f1-score": 0.16172383825904102,
+            "support": 59837.0
         },
         "B-LANGUAGE": {
             "precision": 0.0,
             "recall": 0.0,
             "f1-score": 0.0,
-            "support": 5969.0
+            "support": 4966.0
         },
         "B-LAW": {
             "precision": 0.0,
             "recall": 0.0,
             "f1-score": 0.0,
-            "support": 504.0
+            "support": 393.0
         },
         "B-LOC": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1-score": 0.0,
-            "support": 8301.0
+            "precision": 0.017601463657673996,
+            "recall": 0.0003022061045633122,
+            "f1-score": 0.0005942099957426439,
+            "support": 6618.0
         },
         "B-MONEY": {
             "precision": 0.0,
             "recall": 0.0,
             "f1-score": 0.0,
-            "support": 327.0
+            "support": 320.0
         },
         "B-NORP": {
-            "precision": 0.04559097512885376,
-            "recall": 0.008134509932091367,
-            "f1-score": 0.013805747480127724,
-            "support": 27537.0
+            "precision": 0.05539097931997271,
+            "recall": 0.010559457495761686,
+            "f1-score": 0.017737522904118865,
+            "support": 20645.0
         },
         "B-ORDINAL": {
             "precision": 0.0,
             "recall": 0.0,
             "f1-score": 0.0,
-            "support": 6832.0
+            "support": 5845.0
         },
         "B-ORG": {
-            "precision": 0.06481267154296134,
-            "recall": 0.0018084440425679906,
-            "f1-score": 0.003514541524296183,
-            "support": 28754.0
+            "precision": 0.267133350604652,
+            "recall": 0.03725172619555025,
+            "f1-score": 0.06363173976964448,
+            "support": 23462.0
         },
         "B-PERCENT": {
-            "precision": 0.9709102195529301,
-            "recall": 0.21298701298701297,
-            "f1-score": 0.3492980387782555,
-            "support": 770.0
+            "precision": 0.9707059294954724,
+            "recall": 0.1889400921658986,
+            "f1-score": 0.3163036407983618,
+            "support": 868.0
         },
         "B-PERSON": {
-            "precision": 0.1994303826549007,
-            "recall": 0.0982459831172588,
-            "f1-score": 0.12977217249018627,
-            "support": 76054.0
+            "precision": 0.22100644294182079,
+            "recall": 0.09459200918338063,
+            "f1-score": 0.13001402207655408,
+            "support": 62722.0
         },
         "B-PRODUCT": {
-            "precision": 0.1893320090999572,
-            "recall": 0.0061931488291078,
-            "f1-score": 0.011972707303495249,
-            "support": 5167.0
+            "precision": 0.12025699140820542,
+            "recall": 0.006927906473262611,
+            "f1-score": 0.013060038011806463,
+            "support": 4619.0
         },
         "B-QUANTITY": {
             "precision": 0.0,
             "recall": 0.0,
             "f1-score": 0.0,
-            "support": 1953.0
+            "support": 2071.0
         },
         "B-TIME": {
             "precision": 0.0,
             "recall": 0.0,
             "f1-score": 0.0,
-            "support": 445.0
+            "support": 435.0
         },
         "B-TITLE": {
             "precision": 0.0,
             "recall": 0.0,
             "f1-score": 0.0,
-            "support": 15693.0
+            "support": 11840.0
         },
         "B-WORK_OF_ART": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1-score": 0.0,
-            "support": 15654.0
+            "precision": 0.023104527588109356,
+            "recall": 0.007141771767208631,
+            "f1-score": 0.010910905885380011,
+            "support": 13162.0
         },
         "I-CARDINAL": {
             "precision": 0.0,
             "recall": 0.0,
             "f1-score": 0.0,
-            "support": 1436.0
+            "support": 1186.0
         },
         "I-DATE": {
             "precision": 0.0,
             "recall": 0.0,
             "f1-score": 0.0,
-            "support": 38166.0
+            "support": 26694.0
         },
         "I-EVENT": {
-            "precision": 0.0715715569024615,
-            "recall": 0.0017863763524217197,
-            "f1-score": 0.0034857507861442345,
-            "support": 29669.0
+            "precision": 0.11359429991906313,
+            "recall": 0.008588631131574287,
+            "f1-score": 0.01585811376170159,
+            "support": 22588.0
         },
         "I-FAC": {
             "precision": 0.0,
             "recall": 0.0,
             "f1-score": 0.0,
-            "support": 9994.0
+            "support": 7269.0
         },
         "I-GPE": {
             "precision": 0.0,
             "recall": 0.0,
             "f1-score": 0.0,
-            "support": 26176.0
+            "support": 19486.0
         },
         "I-LANGUAGE": {
             "precision": 0.0,
             "recall": 0.0,
             "f1-score": 0.0,
-            "support": 918.0
+            "support": 660.0
         },
         "I-LAW": {
             "precision": 0.0,
             "recall": 0.0,
             "f1-score": 0.0,
-            "support": 986.0
+            "support": 677.0
         },
         "I-LOC": {
             "precision": 0.0,
             "recall": 0.0,
             "f1-score": 0.0,
-            "support": 9358.0
+            "support": 6923.0
         },
         "I-MONEY": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1-score": 0.0,
-            "support": 924.0
+            "precision": 0.14642678660669664,
+            "recall": 0.0014992503748125937,
+            "f1-score": 0.0029681105393249323,
+            "support": 667.0
         },
         "I-NORP": {
             "precision": 0.0,
             "recall": 0.0,
             "f1-score": 0.0,
-            "support": 6272.0
+            "support": 4447.0
         },
         "I-ORDINAL": {
             "precision": 0.0,
             "recall": 0.0,
             "f1-score": 0.0,
-            "support": 374.0
+            "support": 293.0
         },
         "I-ORG": {
-            "precision": 0.40756071481125555,
-            "recall": 0.009464200085808748,
-            "f1-score": 0.01794858812598686,
-            "support": 39623.0
+            "precision": 0.109287924011987,
+            "recall": 0.015399358910809293,
+            "f1-score": 0.026979393518677838,
+            "support": 30261.0
         },
         "I-PERCENT": {
             "precision": 0.0,
             "recall": 0.0,
             "f1-score": 0.0,
-            "support": 218.0
+            "support": 207.0
         },
         "I-PERSON": {
-            "precision": 0.13531322663231635,
-            "recall": 0.020041800403075315,
-            "f1-score": 0.030365323863126095,
-            "support": 53588.0
+            "precision": 0.16618256892870367,
+            "recall": 0.02127610898858411,
+            "f1-score": 0.035737204805709376,
+            "support": 43711.0
         },
         "I-PRODUCT": {
             "precision": 0.0,
             "recall": 0.0,
             "f1-score": 0.0,
-            "support": 4075.0
+            "support": 3608.0
         },
         "I-QUANTITY": {
             "precision": 0.0,
             "recall": 0.0,
             "f1-score": 0.0,
-            "support": 2507.0
+            "support": 2136.0
         },
         "I-TIME": {
             "precision": 0.0,
             "recall": 0.0,
             "f1-score": 0.0,
-            "support": 679.0
+            "support": 480.0
         },
         "I-TITLE": {
             "precision": 0.0,
             "recall": 0.0,
             "f1-score": 0.0,
-            "support": 10908.0
+            "support": 8269.0
         },
         "I-WORK_OF_ART": {
-            "precision": 0.02943343381625124,
-            "recall": 0.00013497705390083686,
-            "f1-score": 0.0002687217923309671,
-            "support": 22226.0
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 19068.0
         },
         "O": {
-            "precision": 0.6879878528168002,
-            "recall": 0.9925529872686816,
-            "f1-score": 0.8126439297114499,
-            "support": 1057471.0
+            "precision": 0.6816598887034466,
+            "recall": 0.9898823987279706,
+            "f1-score": 0.8073396060197346,
+            "support": 781114.0
         }
     },
-    "training_duration_seconds": 85.90785813331604,
+    "training_duration_seconds": 64.7019350528717,
     "average_epochs": 1,
     "labels": [
         "B-CARDINAL",

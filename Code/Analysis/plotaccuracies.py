@@ -93,7 +93,7 @@ if __name__ == "__main__":
     for lang in LANGS:
         for strategy in STRATEGIES:
             output_directory = rf"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}\{lang} Evaluation\Plots"  # Change this to your desired output folder
-            file_path = fr"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}\{lang} Evaluation\{lang}_{strategy}_POS_results.json"  # Path to input JSON file
+            file_path = fr"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}\{lang} Evaluation\{lang}_{strategy}_NER_results.json"  # Path to input JSON file
             data = load_classification_data(file_path)
             if data:  # Only process if file exists and is loaded
                 save_dir = os.path.join(output_directory, strategy)  # Define where to save plots
