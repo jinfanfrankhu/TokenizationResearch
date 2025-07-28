@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import json
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
 from sklearn.model_selection import KFold
@@ -10,6 +10,10 @@ import time
 import youtokentome as yttm
 from collections import defaultdict
 import pickle
+import matplotlib.pyplot as plt
+from contextlib import redirect_stdout
+import io
+import re
 
 from Code.tokenizetexts import get_tokenizer
 from Code.metasettings import LANGS, STRATEGIES, RUNNUMBER, TEST_STRATEGIES, TEST_LANGS
@@ -90,6 +94,8 @@ def words_to_embeddings(sentences, ner_tags, w2v_model, tokenizer):
 
 # Train and evaluate Logistic Regression model
 def train_logistic_regression(X_train, y_train, X_test, y_test):
+    changes = []
+
     print("Encoding NER tags...")
     label_encoder = LabelEncoder()
     y_train_encoded = label_encoder.fit_transform(y_train)
@@ -97,15 +103,30 @@ def train_logistic_regression(X_train, y_train, X_test, y_test):
 
     print("Training Logistic Regression...")
     start_time = time.time()
+    captured_output = io.StringIO()
+    
     model = LogisticRegression(
         max_iter=1 if TEST_MODE else 500,
         solver="saga",
         verbose=1,
         n_jobs=-1
     )
-    model.fit(X_train, y_train_encoded)
+    
+    # Redirect stdout to capture the verbose output
+    with redirect_stdout(captured_output):
+        model.fit(X_train, y_train_encoded)
+    
+    # Parse the captured output to extract epoch and change information
+    output_lines = captured_output.getvalue().split('\n')
+    for line in output_lines:
+        # Look for lines containing epoch and change information
+        # The format is typically: "-- Epoch 1, change: 0.123456"
+        match = re.search(r'Epoch\s*:?\s*(\d+)[^\d]+change\s*:?\s*([\d.eE+-]+)', line)
+        if match:
+            change = float(match.group(2))
+            changes.append(change)
+    
     end_time = time.time()
-
     train_duration = float(end_time - start_time)
     n_epochs = int(model.n_iter_.max()) if hasattr(model, "n_iter_") else "N/A"
 
@@ -133,7 +154,105 @@ def train_logistic_regression(X_train, y_train, X_test, y_test):
         target_names=label_encoder.classes_,
         zero_division=0
     ))
-    return accuracy, class_report, conf_matrix, label_encoder.classes_, train_duration, n_epochs
+    return accuracy, class_report, conf_matrix, label_encoder.classes_, train_duration, n_epochs, changes
+
+# Train and evaluate SGD model
+def train_SGD_regression(X_train, y_train, X_test, y_test, patience=5, delta=1e-4, max_epochs=500):
+    print("Encoding NER tags...")
+    label_encoder = LabelEncoder()
+    y_train_encoded = label_encoder.fit_transform(y_train)
+    y_test_encoded = label_encoder.transform(y_test)
+
+    print("Training SGD Regression with early stopping...")
+    model = SGDClassifier(
+        loss="log_loss",
+        penalty="l2",
+        learning_rate="optimal",
+        class_weight="balanced",
+        n_jobs=-1,
+        random_state=42
+    )
+
+    best_loss = float("inf")
+    epochs_without_improvement = 0
+    losses = []
+    start_time = time.time()
+
+    for epoch in range(1 if TEST_MODE else max_epochs):
+        model.partial_fit(X_train, y_train_encoded, classes=np.unique(y_train_encoded))
+        y_pred_proba = model.predict_proba(X_train)
+        train_loss = -np.mean(np.log(y_pred_proba[np.arange(len(y_train_encoded)), y_train_encoded] + 1e-15))
+        losses.append(train_loss)
+
+        print(f"Epoch {epoch + 1}, Loss: {train_loss:.6f}")
+
+        if train_loss < best_loss - delta:
+            best_loss = train_loss
+            epochs_without_improvement = 0
+        else:
+            epochs_without_improvement += 1
+
+        if epochs_without_improvement >= patience:
+            print(f"Early stopping triggered after {epoch + 1} epochs.")
+            break
+
+    end_time = time.time()
+    train_duration = float(end_time - start_time)
+    n_epochs = epoch + 1
+
+    print("Evaluating model...")
+    y_pred = model.predict(X_test)
+
+    accuracy = accuracy_score(y_test_encoded, y_pred)
+    class_report = classification_report(
+        y_test_encoded,
+        y_pred,
+        labels=np.arange(len(label_encoder.classes_)),
+        target_names=label_encoder.classes_,
+        output_dict=True,
+        zero_division=0
+    )
+    conf_matrix = confusion_matrix(y_test_encoded, y_pred)
+
+    print(f"Accuracy: {accuracy:.4f}")
+    print(classification_report(
+        y_test_encoded,
+        y_pred,
+        labels=np.arange(len(label_encoder.classes_)),
+        target_names=label_encoder.classes_,
+        zero_division=0
+    ))
+
+    return accuracy, class_report, conf_matrix, label_encoder.classes_, train_duration, n_epochs, losses
+    
+def plot_changes_over_epochs(change_list, save_dir, filename="epoch_vs_change.png", title=None):
+    """
+    Plots a line graph of change values over training epochs.
+
+    Args:
+        change_list (List[float]): Change values per epoch.
+        save_dir (str): Directory where the plot image will be saved.
+        filename (str): Output filename for the saved plot image.
+        title (str): Optional plot title. Defaults to "Epoch vs Change".
+    """
+    if not change_list:
+        print("Warning: Empty change list passed to plot_changes_over_epochs().")
+        return
+
+    os.makedirs(save_dir, exist_ok=True)
+    save_path = os.path.join(save_dir, filename)
+
+    plt.figure(figsize=(10, 5))
+    plt.plot(range(1, len(change_list) + 1), change_list, marker='o', markersize=2, linestyle='-', linewidth=1, color='green')
+    plt.xlabel("Epoch")
+    plt.ylabel("Change")
+    plt.title(title or f"Epoch vs Change (Epochs 1–{len(change_list)})")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(save_path)
+    plt.close()
+
+    print(f"Epoch-change plot saved to: {save_path}")
 
 def cache_tokenized_sentences(lang, strategy, runnumber, sentences, tags, tokenizer):
     cache_dir = os.path.join("cache", f"{lang}_{strategy}_run{runnumber}")
@@ -284,10 +403,16 @@ if __name__ == "__main__":
                 X_train, y_train = safe_concatenate_embeddings(embeddings_by_sentence, tags_by_sentence, valid_train_idx)
                 X_test, y_test = safe_concatenate_embeddings(embeddings_by_sentence, tags_by_sentence, valid_test_idx)
 
-                acc, report, conf_matrix, classes, duration, epochs = train_logistic_regression(X_train, y_train, X_test, y_test)
+                if strategy.startswith("BPE"):
+                    acc, report, conf_matrix, classes, duration, epochs, losses = train_logistic_regression(X_train, y_train, X_test, y_test)
+                else:
+                    acc, report, conf_matrix, classes, duration, epochs, losses = train_logistic_regression(X_train, y_train, X_test, y_test)
+
                 total_accuracy += acc
                 total_duration += duration
                 total_epochs += epochs if isinstance(epochs, int) else 0
+
+                plot_changes_over_epochs(losses, f"C:\\Users\\jinfa\\Desktop\\Research Dr. Mani\\{lang} Run {RUNNUMBER}\\{lang} Evaluation\\Plots\\{strategy}\\losses", filename=f"fold {fold+1}.png")
 
                 for label, scores in report.items():
                     if label in ("accuracy", "macro avg", "weighted avg"):

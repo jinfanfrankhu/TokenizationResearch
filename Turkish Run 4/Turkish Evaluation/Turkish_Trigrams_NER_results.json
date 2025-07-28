@@ -1,0 +1,282 @@
+{
+    "average_accuracy": 0.6889621992457764,
+    "classification_report": {
+        "B-CARDINAL": {
+            "precision": 0.4177983957534611,
+            "recall": 0.3762183235867446,
+            "f1-score": 0.3954600386824367,
+            "support": 4104.0
+        },
+        "B-DATE": {
+            "precision": 0.544834376091861,
+            "recall": 0.6869990779487907,
+            "f1-score": 0.6073340707597674,
+            "support": 14099.0
+        },
+        "B-EVENT": {
+            "precision": 0.4372171116520083,
+            "recall": 0.024423006472096716,
+            "f1-score": 0.04625078131058594,
+            "support": 8189.0
+        },
+        "B-FAC": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 4086.0
+        },
+        "B-GPE": {
+            "precision": 0.3622565717807357,
+            "recall": 0.31944946858904794,
+            "f1-score": 0.33948550173324193,
+            "support": 58053.0
+        },
+        "B-LANGUAGE": {
+            "precision": 0.664588380647733,
+            "recall": 0.12883435582822086,
+            "f1-score": 0.21574091659143282,
+            "support": 4401.0
+        },
+        "B-LAW": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 350.0
+        },
+        "B-LOC": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 5669.0
+        },
+        "B-MONEY": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 148.0
+        },
+        "B-NORP": {
+            "precision": 0.36666292253599003,
+            "recall": 0.11097112331804666,
+            "f1-score": 0.1703580490174959,
+            "support": 19843.0
+        },
+        "B-ORDINAL": {
+            "precision": 0.5129258821461067,
+            "recall": 0.4234159779614325,
+            "f1-score": 0.46356225399006995,
+            "support": 3630.0
+        },
+        "B-ORG": {
+            "precision": 0.310512306151227,
+            "recall": 0.02863107664777811,
+            "f1-score": 0.0524052516995464,
+            "support": 20118.0
+        },
+        "B-PERCENT": {
+            "precision": 0.6746443957839445,
+            "recall": 0.4013921113689095,
+            "f1-score": 0.5029466021196235,
+            "support": 431.0
+        },
+        "B-PERSON": {
+            "precision": 0.3040988438101015,
+            "recall": 0.38043100451859574,
+            "f1-score": 0.3379745687155714,
+            "support": 51786.0
+        },
+        "B-PRODUCT": {
+            "precision": 0.3850962539070339,
+            "recall": 0.03760071620411817,
+            "f1-score": 0.06830381736405992,
+            "support": 3351.0
+        },
+        "B-QUANTITY": {
+            "precision": 0.30196260377968925,
+            "recall": 0.07833537331701346,
+            "f1-score": 0.12181616855195905,
+            "support": 817.0
+        },
+        "B-TIME": {
+            "precision": 0.4373386737872719,
+            "recall": 0.11682242990654206,
+            "f1-score": 0.18293449854587635,
+            "support": 214.0
+        },
+        "B-TITLE": {
+            "precision": 0.3315232045339835,
+            "recall": 0.005037783375314861,
+            "f1-score": 0.009907106289871173,
+            "support": 11116.0
+        },
+        "B-WORK_OF_ART": {
+            "precision": 0.45536269482149755,
+            "recall": 0.019745285813012145,
+            "f1-score": 0.03784752188378969,
+            "support": 10129.0
+        },
+        "I-CARDINAL": {
+            "precision": 0.4130625416535129,
+            "recall": 0.09165526675786594,
+            "f1-score": 0.14890016783859433,
+            "support": 731.0
+        },
+        "I-DATE": {
+            "precision": 0.5561342920395932,
+            "recall": 0.23762214317838015,
+            "f1-score": 0.3329679373530298,
+            "support": 24459.0
+        },
+        "I-EVENT": {
+            "precision": 0.4445079025359989,
+            "recall": 0.14289770038800037,
+            "f1-score": 0.21624672729091968,
+            "support": 21134.0
+        },
+        "I-FAC": {
+            "precision": 0.6889994642112992,
+            "recall": 0.002361439088762328,
+            "f1-score": 0.004703424432319135,
+            "support": 7199.0
+        },
+        "I-GPE": {
+            "precision": 0.4476526180180665,
+            "recall": 0.050713399503722084,
+            "f1-score": 0.09109497435147124,
+            "support": 19344.0
+        },
+        "I-LANGUAGE": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 645.0
+        },
+        "I-LAW": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 722.0
+        },
+        "I-LOC": {
+            "precision": 0.650065285905598,
+            "recall": 0.025483304042179262,
+            "f1-score": 0.049039634555443704,
+            "support": 6828.0
+        },
+        "I-MONEY": {
+            "precision": 0.20973154362416108,
+            "recall": 0.0016778523489932886,
+            "f1-score": 0.0033290721210184294,
+            "support": 596.0
+        },
+        "I-NORP": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 4681.0
+        },
+        "I-ORDINAL": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 234.0
+        },
+        "I-ORG": {
+            "precision": 0.3146486678414856,
+            "recall": 0.08583735714037587,
+            "f1-score": 0.13480285111541107,
+            "support": 28787.0
+        },
+        "I-PERCENT": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 118.0
+        },
+        "I-PERSON": {
+            "precision": 0.24640456984241504,
+            "recall": 0.06998133470392512,
+            "f1-score": 0.10888482014224574,
+            "support": 36967.0
+        },
+        "I-PRODUCT": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 2487.0
+        },
+        "I-QUANTITY": {
+            "precision": 0.572154803566386,
+            "recall": 0.1293451899757478,
+            "f1-score": 0.19723986535529292,
+            "support": 1237.0
+        },
+        "I-TIME": {
+            "precision": 0.4272049027444711,
+            "recall": 0.07913669064748201,
+            "f1-score": 0.1334150263452211,
+            "support": 417.0
+        },
+        "I-TITLE": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 7755.0
+        },
+        "I-WORK_OF_ART": {
+            "precision": 0.257076623679314,
+            "recall": 0.03479362241096707,
+            "f1-score": 0.061270264228554736,
+            "support": 13422.0
+        },
+        "O": {
+            "precision": 0.7558277070997313,
+            "recall": 0.9764949502802259,
+            "f1-score": 0.8521066935172281,
+            "support": 707465.0
+        }
+    },
+    "training_duration_seconds": 11138.78586435318,
+    "average_epochs": 230,
+    "labels": [
+        "B-CARDINAL",
+        "B-DATE",
+        "B-EVENT",
+        "B-FAC",
+        "B-GPE",
+        "B-LANGUAGE",
+        "B-LAW",
+        "B-LOC",
+        "B-MONEY",
+        "B-NORP",
+        "B-ORDINAL",
+        "B-ORG",
+        "B-PERCENT",
+        "B-PERSON",
+        "B-PRODUCT",
+        "B-QUANTITY",
+        "B-TIME",
+        "B-TITLE",
+        "B-WORK_OF_ART",
+        "I-CARDINAL",
+        "I-DATE",
+        "I-EVENT",
+        "I-FAC",
+        "I-GPE",
+        "I-LANGUAGE",
+        "I-LAW",
+        "I-LOC",
+        "I-MONEY",
+        "I-NORP",
+        "I-ORDINAL",
+        "I-ORG",
+        "I-PERCENT",
+        "I-PERSON",
+        "I-PRODUCT",
+        "I-QUANTITY",
+        "I-TIME",
+        "I-TITLE",
+        "I-WORK_OF_ART",
+        "O"
+    ]
+}
