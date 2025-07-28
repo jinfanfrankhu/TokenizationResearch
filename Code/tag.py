@@ -10,6 +10,8 @@ import time
 import youtokentome as yttm
 from collections import defaultdict
 import pickle
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from contextlib import redirect_stdout
 import io
@@ -158,7 +160,7 @@ def train_logistic_regression(X_train, y_train, X_test, y_test):
     return accuracy, class_report, conf_matrix, label_encoder.classes_, train_duration, n_epochs, changes
 
 # Train and evaluate SGD model
-def train_SGD_regression(X_train, y_train, X_test, y_test, patience=5, delta=1e-4, max_epochs=500):
+def train_SGD_regression(X_train, y_train, X_test, y_test, patience=8, delta=1e-4, max_epochs=500):
     print("Encoding NER tags...")
     label_encoder = LabelEncoder()
     y_train_encoded = label_encoder.fit_transform(y_train)
@@ -198,6 +200,7 @@ def train_SGD_regression(X_train, y_train, X_test, y_test, patience=5, delta=1e-
 
     end_time = time.time()
     train_duration = float(end_time - start_time)
+    print(f"Train Duration: {train_duration} seconds")
     n_epochs = epoch + 1
 
     print("Evaluating model...")
@@ -403,10 +406,10 @@ if __name__ == "__main__":
                 X_train, y_train = safe_concatenate_embeddings(embeddings_by_sentence, tags_by_sentence, valid_train_idx)
                 X_test, y_test = safe_concatenate_embeddings(embeddings_by_sentence, tags_by_sentence, valid_test_idx)
 
-                if strategy.startswith("BPE"):
-                    acc, report, conf_matrix, classes, duration, epochs, losses = train_SGD_regression(X_train, y_train, X_test, y_test)
-                else:
-                    acc, report, conf_matrix, classes, duration, epochs, losses = train_logistic_regression(X_train, y_train, X_test, y_test)
+                #if strategy.startswith("BPE"):
+                acc, report, conf_matrix, classes, duration, epochs, losses = train_SGD_regression(X_train, y_train, X_test, y_test)
+                #else:
+                    #acc, report, conf_matrix, classes, duration, epochs, losses = train_logistic_regression(X_train, y_train, X_test, y_test)
 
                 total_accuracy += acc
                 total_duration += duration
