@@ -125,6 +125,7 @@ def train_logistic_regression(X_train, y_train, X_test, y_test):
         if match:
             change = float(match.group(2))
             changes.append(change)
+            print("Appended change:", change)
     
     end_time = time.time()
     train_duration = float(end_time - start_time)
@@ -168,7 +169,6 @@ def train_SGD_regression(X_train, y_train, X_test, y_test, patience=5, delta=1e-
         loss="log_loss",
         penalty="l2",
         learning_rate="optimal",
-        class_weight="balanced",
         n_jobs=-1,
         random_state=42
     )
@@ -404,7 +404,7 @@ if __name__ == "__main__":
                 X_test, y_test = safe_concatenate_embeddings(embeddings_by_sentence, tags_by_sentence, valid_test_idx)
 
                 if strategy.startswith("BPE"):
-                    acc, report, conf_matrix, classes, duration, epochs, losses = train_logistic_regression(X_train, y_train, X_test, y_test)
+                    acc, report, conf_matrix, classes, duration, epochs, losses = train_SGD_regression(X_train, y_train, X_test, y_test)
                 else:
                     acc, report, conf_matrix, classes, duration, epochs, losses = train_logistic_regression(X_train, y_train, X_test, y_test)
 
