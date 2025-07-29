@@ -94,7 +94,7 @@ def words_to_embeddings(sentences, ner_tags, w2v_model, tokenizer):
 
     return np.array(X), np.array(y)
 
-# Train and evaluate Logistic Regression model
+# Train and evaluate Logistic Regression model UNUSED NOW!
 def train_logistic_regression(X_train, y_train, X_test, y_test):
     changes = []
 

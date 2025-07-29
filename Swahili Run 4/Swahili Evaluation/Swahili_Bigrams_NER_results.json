@@ -1,0 +1,72 @@
+{
+    "average_accuracy": 0.8478337661822462,
+    "classification_report": {
+        "B-DATE": {
+            "precision": 0.6760941135911284,
+            "recall": 0.1568499127399651,
+            "f1-score": 0.2545395296600484,
+            "support": 4584.0
+        },
+        "B-LOC": {
+            "precision": 0.4949238514707673,
+            "recall": 0.12701458173445895,
+            "f1-score": 0.20192530173210133,
+            "support": 15636.0
+        },
+        "B-ORG": {
+            "precision": 0.6976531180433052,
+            "recall": 0.2436769105248844,
+            "f1-score": 0.3602540090072287,
+            "support": 3677.0
+        },
+        "B-PER": {
+            "precision": 0.3629904296092265,
+            "recall": 0.10863343668018126,
+            "f1-score": 0.1669274205082294,
+            "support": 8386.0
+        },
+        "I-DATE": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 1060.0
+        },
+        "I-LOC": {
+            "precision": 0.33264978601997147,
+            "recall": 0.006419400855920114,
+            "f1-score": 0.012593102350260852,
+            "support": 2804.0
+        },
+        "I-ORG": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 4390.0
+        },
+        "I-PER": {
+            "precision": 0.19331651954602777,
+            "recall": 0.000819672131147541,
+            "f1-score": 0.0016293171043271003,
+            "support": 4880.0
+        },
+        "O": {
+            "precision": 0.8591785493802203,
+            "recall": 0.9930729563083133,
+            "f1-score": 0.9212851679838938,
+            "support": 233866.0
+        }
+    },
+    "training_duration_seconds": 38.515493631362915,
+    "average_epochs": 33,
+    "labels": [
+        "B-DATE",
+        "B-LOC",
+        "B-ORG",
+        "B-PER",
+        "I-DATE",
+        "I-LOC",
+        "I-ORG",
+        "I-PER",
+        "O"
+    ]
+}

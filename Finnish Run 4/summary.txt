@@ -1,1 +1,3 @@
 Lmao used mwparserfromhell and used new corpus from the correct wikipedia scrape
+
+used sgd instead of logistic regression

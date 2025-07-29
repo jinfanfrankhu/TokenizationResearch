@@ -1,5 +1,5 @@
 {
-    "average_accuracy": 0.6605436230365687,
+    "average_accuracy": 0.6602068494280919,
     "classification_report": {
         "B-CARDINAL": {
             "precision": 0.0,
@@ -26,9 +26,9 @@
             "support": 5869.0
         },
         "B-GPE": {
-            "precision": 0.2268581565281871,
-            "recall": 0.08211869321476899,
-            "f1-score": 0.12034043996598737,
+            "precision": 0.255808393116362,
+            "recall": 0.0593594948128101,
+            "f1-score": 0.09635046716823356,
             "support": 77595.0
         },
         "B-LANGUAGE": {
@@ -68,9 +68,9 @@
             "support": 6832.0
         },
         "B-ORG": {
-            "precision": 0.15861686248113302,
-            "recall": 0.004834110036864436,
-            "f1-score": 0.009380379313601972,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
             "support": 28754.0
         },
         "B-PERCENT": {
@@ -80,15 +80,15 @@
             "support": 770.0
         },
         "B-PERSON": {
-            "precision": 0.19431718502897272,
-            "recall": 0.1141688800063113,
-            "f1-score": 0.1438194951466986,
+            "precision": 0.20160744825308344,
+            "recall": 0.11043469114050543,
+            "f1-score": 0.1426640588894311,
             "support": 76054.0
         },
         "B-PRODUCT": {
-            "precision": 0.11575948079894242,
-            "recall": 0.0032901103154635183,
-            "f1-score": 0.006387030933899794,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
             "support": 5167.0
         },
         "B-QUANTITY": {
@@ -164,9 +164,9 @@
             "support": 9358.0
         },
         "I-MONEY": {
-            "precision": 0.47327870542156253,
-            "recall": 0.00974025974025974,
-            "f1-score": 0.019006070608057823,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
             "support": 924.0
         },
         "I-NORP": {
@@ -194,9 +194,9 @@
             "support": 218.0
         },
         "I-PERSON": {
-            "precision": 0.21057567076591316,
-            "recall": 0.008695976711204001,
-            "f1-score": 0.016629278554119085,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
             "support": 53588.0
         },
         "I-PRODUCT": {
@@ -230,14 +230,14 @@
             "support": 22226.0
         },
         "O": {
-            "precision": 0.6882655465459522,
-            "recall": 0.9930418895648202,
-            "f1-score": 0.8130295943697607,
+            "precision": 0.6822941167981225,
+            "recall": 0.9950532922415839,
+            "f1-score": 0.8095146097177598,
             "support": 1057471.0
         }
     },
-    "training_duration_seconds": 40531.80159473419,
-    "average_epochs": 500,
+    "training_duration_seconds": 285.6341097354889,
+    "average_epochs": 21,
     "labels": [
         "B-CARDINAL",
         "B-DATE",

@@ -1,0 +1,72 @@
+{
+    "average_accuracy": 0.8625375370962631,
+    "classification_report": {
+        "B-DATE": {
+            "precision": 0.7592765139567992,
+            "recall": 0.2611674431351055,
+            "f1-score": 0.3879657906234833,
+            "support": 3649.0
+        },
+        "B-LOC": {
+            "precision": 0.6157648048341392,
+            "recall": 0.3325777708300766,
+            "f1-score": 0.4317500018584633,
+            "support": 12794.0
+        },
+        "B-ORG": {
+            "precision": 0.6302124654280287,
+            "recall": 0.15540044085231447,
+            "f1-score": 0.24927169857802692,
+            "support": 2722.0
+        },
+        "B-PER": {
+            "precision": 0.49517943057737573,
+            "recall": 0.283213644524237,
+            "f1-score": 0.3595600031701963,
+            "support": 6684.0
+        },
+        "I-DATE": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 678.0
+        },
+        "I-LOC": {
+            "precision": 0.50351233907333,
+            "recall": 0.06021194605009634,
+            "f1-score": 0.10702746675356949,
+            "support": 2076.0
+        },
+        "I-ORG": {
+            "precision": 0.3925820766300612,
+            "recall": 0.0346732126419147,
+            "f1-score": 0.06300286044630647,
+            "support": 3259.0
+        },
+        "I-PER": {
+            "precision": 0.3887538603040395,
+            "recall": 0.023405349794238684,
+            "f1-score": 0.043871172447526995,
+            "support": 3888.0
+        },
+        "O": {
+            "precision": 0.8811224445038495,
+            "recall": 0.9892750460192014,
+            "f1-score": 0.9320621050504131,
+            "support": 181446.0
+        }
+    },
+    "training_duration_seconds": 60.07122325897217,
+    "average_epochs": 63,
+    "labels": [
+        "B-DATE",
+        "B-LOC",
+        "B-ORG",
+        "B-PER",
+        "I-DATE",
+        "I-LOC",
+        "I-ORG",
+        "I-PER",
+        "O"
+    ]
+}

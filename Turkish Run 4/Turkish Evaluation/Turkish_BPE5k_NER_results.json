@@ -1,5 +1,5 @@
 {
-    "average_accuracy": 0.6479881196842355,
+    "average_accuracy": 0.6478862851502973,
     "classification_report": {
         "B-CARDINAL": {
             "precision": 0.0,
@@ -26,9 +26,9 @@
             "support": 4715.0
         },
         "B-GPE": {
-            "precision": 0.24101272460860887,
-            "recall": 0.142971739893377,
-            "f1-score": 0.17944766588777672,
+            "precision": 0.24833551209725474,
+            "recall": 0.1362033524407975,
+            "f1-score": 0.17573043855280102,
             "support": 59837.0
         },
         "B-LANGUAGE": {
@@ -80,9 +80,9 @@
             "support": 868.0
         },
         "B-PERSON": {
-            "precision": 0.20793662885584913,
-            "recall": 0.12874270590861261,
-            "f1-score": 0.15892352756939215,
+            "precision": 0.20576201196038763,
+            "recall": 0.13178788941679156,
+            "f1-score": 0.16057097239587934,
             "support": 62722.0
         },
         "B-PRODUCT": {
@@ -230,14 +230,14 @@
             "support": 19068.0
         },
         "O": {
-            "precision": 0.6829670405276763,
-            "recall": 0.9895264967725582,
-            "f1-score": 0.808150277064184,
+            "precision": 0.682260136577005,
+            "recall": 0.9896378761614822,
+            "f1-score": 0.8076932363470684,
             "support": 781114.0
         }
     },
-    "training_duration_seconds": 178.47633004188538,
-    "average_epochs": 16,
+    "training_duration_seconds": 267.7504196166992,
+    "average_epochs": 25,
     "labels": [
         "B-CARDINAL",
         "B-DATE",
