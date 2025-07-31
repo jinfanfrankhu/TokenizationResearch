@@ -28,6 +28,15 @@ args = parser.parse_args()
 
 TEST_MODE = args.mode == "test"
 
+try:
+    import sklearn_crfsuite
+    from sklearn_crfsuite import scorers, metrics
+    CRF_AVAILABLE = True
+except ImportError:
+    print("Warning: sklearn-crfsuite not installed. CRF training will be skipped.")
+    print("Install with: pip install sklearn-crfsuite")
+    CRF_AVAILABLE = False
+
 # Load Word2Vec model
 def load_word2vec():
     model_file = os.path.join(model_path, f"{lang}_{strategy}_word2vec.model")
@@ -323,6 +332,11 @@ def cache_embeddings(lang, strategy, runnumber, tokenized_data, w2v_model):
 
     return cached_data
 
+
+"""
+THIS IS WHERE THE NEW CODE BEGINS FOR CRF AND LARGE CONTEXT SGD
+"""
+
 def safe_concatenate_embeddings(embeddings_list, tags_list, indices):
     """Safely concatenate embeddings handling dimension mismatches"""
     valid_embeddings = []
@@ -360,6 +374,234 @@ def safe_concatenate_embeddings(embeddings_list, tags_list, indices):
         return np.empty((0, embedding_dim)), np.array([])
     
     return np.concatenate(valid_embeddings), np.concatenate(valid_tags)
+
+def embedding_similarity(emb1, emb2):
+    """Compute cosine similarity between embeddings"""
+    if emb1 is None or emb2 is None or len(emb1) == 0 or len(emb2) == 0:
+        return 0.0
+    
+    norm1 = np.linalg.norm(emb1)
+    norm2 = np.linalg.norm(emb2)
+    
+    if norm1 == 0 or norm2 == 0:
+        return 0.0
+    
+    similarity = np.dot(emb1, emb2) / (norm1 * norm2)
+    return round(float(similarity), 3)
+
+def word2features_large_context(sentence_emb, tokens, i, window_size=5):
+    features = {}
+
+    if i < len(tokens):
+        token = tokens[i]
+        features.update({
+            'token': token.lower(),
+            'token_orig': token,
+            'token.isupper': token.isupper(),
+            'token.islower': token.islower(),
+            'token.istitle': token.istitle(),
+            'token.isdigit': token.isdigit(),
+        })
+
+    if i < len(sentence_emb):
+        embedding = sentence_emb[i]
+        for dim_idx in range(min(15, len(embedding))):
+            value = embedding[dim_idx]
+            if value > 0.3:
+                features[f'emb_dim_{dim_idx}'] = 'high'
+            elif value < -0.3:
+                features[f'emb_dim_{dim_idx}'] = 'low'
+            else:
+                features[f'emb_dim_{dim_idx}'] = 'mid'
+
+    features.update({
+        'position': i,
+        'is_first': i == 0,
+        'is_last': i == len(tokens) - 1,
+        'position_ratio': round(i / len(tokens), 2) if len(tokens) > 0 else 0,
+    })
+
+    for offset in range(-window_size, window_size + 1):
+        if offset == 0:
+            continue
+        pos = i + offset
+        if 0 <= pos < len(tokens):
+            context_token = tokens[pos]
+            features.update({
+                f'context_{offset}_token': context_token.lower(),
+                f'context_{offset}_len': len(context_token),
+                f'context_{offset}_isupper': context_token.isupper(),
+                f'context_{offset}_istitle': context_token.istitle(),
+            })
+            if pos < len(sentence_emb) and i < len(sentence_emb):
+                norm1 = np.linalg.norm(sentence_emb[i])
+                norm2 = np.linalg.norm(sentence_emb[pos])
+                if norm1 > 0 and norm2 > 0:
+                    similarity = np.dot(sentence_emb[i], sentence_emb[pos]) / (norm1 * norm2)
+                    if abs(similarity) > 0.1:
+                        features[f'context_{offset}_similarity'] = round(float(similarity), 3)
+
+    return features
+
+def sent2features_large_context(sentence_emb, tokens, window_size=5):
+    """Convert sentence to feature sequence with large context"""
+    return [word2features_large_context(sentence_emb, tokens, i, window_size) 
+            for i in range(len(tokens))]
+
+def sent2labels(tags):
+    """Convert sentence to label sequence"""
+    return list(tags)
+
+def train_crf_large_context(embeddings_by_sentence, tags_by_sentence, tokenized_data, 
+                           train_idx, test_idx, window_size=5, max_iterations=200):
+    """
+    Train CRF with large context windows - replacement for your SGD function
+    """
+    if not CRF_AVAILABLE:
+        print("CRF not available, falling back to SGD...")
+        return train_SGD_regression(
+            *safe_concatenate_embeddings(embeddings_by_sentence, tags_by_sentence, train_idx + test_idx)
+        )
+    
+    print(f"Training CRF with context window size {window_size}...")
+    
+    # Prepare training data
+    X_train = []
+    y_train = []
+    
+    for idx in train_idx:
+        if idx >= len(embeddings_by_sentence) or len(embeddings_by_sentence[idx]) == 0:
+            continue
+            
+        sentence_emb = embeddings_by_sentence[idx]
+        sentence_tags = tags_by_sentence[idx]
+        tokens, _ = tokenized_data[idx]  # Get original tokens
+        
+        # Ensure lengths match
+        min_len = min(len(sentence_emb), len(sentence_tags), len(tokens))
+        if min_len == 0:
+            continue
+            
+        # Create features with large context
+        features = sent2features_large_context(sentence_emb[:min_len], tokens[:min_len], window_size)
+        labels = sent2labels(sentence_tags[:min_len])
+        
+        X_train.append(features)
+        y_train.append(labels)
+    
+    # Prepare test data
+    X_test = []
+    y_test = []
+    
+    for idx in test_idx:
+        if idx >= len(embeddings_by_sentence) or len(embeddings_by_sentence[idx]) == 0:
+            continue
+            
+        sentence_emb = embeddings_by_sentence[idx]
+        sentence_tags = tags_by_sentence[idx]
+        tokens, _ = tokenized_data[idx]
+        
+        min_len = min(len(sentence_emb), len(sentence_tags), len(tokens))
+        if min_len == 0:
+            continue
+            
+        features = sent2features_large_context(sentence_emb[:min_len], tokens[:min_len], window_size)
+        labels = sent2labels(sentence_tags[:min_len])
+        
+        X_test.append(features)
+        y_test.append(labels)
+    
+    print(f"Training on {len(X_train)} sentences, testing on {len(X_test)} sentences")
+    
+    if len(X_train) == 0 or len(X_test) == 0:
+        print("No valid training or test data, skipping...")
+        return 0.0, {}, None, [], 0.0, 0, []
+    
+    # Train CRF with optimized parameters for agglutinative languages
+    print("Training CRF model...")
+    start_time = time.time()
+    
+    crf = sklearn_crfsuite.CRF(
+        algorithm='lbfgs',
+        c1=0.05,  # L1 regularization - lower for more features
+        c2=0.05,  # L2 regularization - lower for more features  
+        max_iterations=max_iterations,
+        all_possible_transitions=True,
+        verbose=False  # Set to True if you want to see training progress
+    )
+    
+    try:
+        crf.fit(X_train, y_train)
+    except Exception as e:
+        print(f"CRF training failed: {e}")
+        print("Falling back to SGD...")
+        # Fall back to your existing SGD
+        X_train_flat, y_train_flat = safe_concatenate_embeddings(embeddings_by_sentence, tags_by_sentence, train_idx)
+        X_test_flat, y_test_flat = safe_concatenate_embeddings(embeddings_by_sentence, tags_by_sentence, test_idx)
+        return train_SGD_regression(X_train_flat, y_train_flat, X_test_flat, y_test_flat)
+    
+    end_time = time.time()
+    train_duration = end_time - start_time
+    
+    # Predict
+    print("Evaluating CRF...")
+    try:
+        y_pred = crf.predict(X_test)
+    except Exception as e:
+        print(f"CRF prediction failed: {e}")
+        return 0.0, {}, None, [], train_duration, max_iterations, []
+    
+    # Flatten predictions and true labels for evaluation
+    flat_y_test = [tag for sent in y_test for tag in sent]
+    flat_y_pred = [tag for sent in y_pred for tag in sent]
+    
+    if len(flat_y_test) == 0 or len(flat_y_pred) == 0:
+        print("No predictions generated")
+        return 0.0, {}, None, [], train_duration, max_iterations, []
+    
+    # Calculate accuracy
+    accuracy = sum(1 for true, pred in zip(flat_y_test, flat_y_pred) if true == pred) / len(flat_y_test)
+    
+    # Get unique labels
+    unique_labels = sorted(set(flat_y_test))
+    
+    # Create classification report compatible with your existing code
+    class_report = classification_report(
+        flat_y_test, flat_y_pred,
+        labels=unique_labels,
+        target_names=unique_labels,
+        output_dict=True,
+        zero_division=0
+    )
+    
+    print(f"CRF Accuracy: {accuracy:.4f}")
+    print(f"Training Duration: {train_duration:.2f} seconds")
+    
+    # Show most important features (useful for debugging)
+    if hasattr(crf, 'state_features_'):
+        print("\nTop 10 positive features:")
+        top_features = sorted(crf.state_features_, key=lambda x: x[1], reverse=True)[:10]
+        for feature, weight in top_features:
+            print(f"  {feature}: {weight:.3f}")
+    
+    return accuracy, class_report, None, unique_labels, train_duration, max_iterations, []
+
+# Modified integration function that slots into your existing code
+def train_crf_integration(embeddings_by_sentence, tags_by_sentence, tokenized_data, 
+                         train_idx, test_idx, window_size=5):
+    """
+    Drop-in replacement for your train_SGD_regression call
+    This is what you'll use in your main training loop
+    """
+    return train_crf_large_context(
+        embeddings_by_sentence, 
+        tags_by_sentence, 
+        tokenized_data,
+        train_idx, 
+        test_idx, 
+        window_size=window_size,
+        max_iterations=200  # Adjust based on your speed requirements
+    )
 
 if __name__ == "__main__":
     langs_to_run = TEST_LANGS if TEST_MODE else LANGS
@@ -403,13 +645,14 @@ if __name__ == "__main__":
                 valid_train_idx = [i for i in train_idx if i < len(embeddings_by_sentence)]
                 valid_test_idx = [i for i in test_idx if i < len(embeddings_by_sentence)]
                 
-                X_train, y_train = safe_concatenate_embeddings(embeddings_by_sentence, tags_by_sentence, valid_train_idx)
-                X_test, y_test = safe_concatenate_embeddings(embeddings_by_sentence, tags_by_sentence, valid_test_idx)
-
-                #if strategy.startswith("BPE"):
-                acc, report, conf_matrix, classes, duration, epochs, losses = train_SGD_regression(X_train, y_train, X_test, y_test)
-                #else:
-                    #acc, report, conf_matrix, classes, duration, epochs, losses = train_logistic_regression(X_train, y_train, X_test, y_test)
+                acc, report, conf_matrix, classes, duration, epochs, losses = train_crf_integration(
+                    embeddings_by_sentence,
+                    tags_by_sentence,
+                    tokenized_data,
+                    valid_train_idx,
+                    valid_test_idx,
+                    window_size=5
+                )
 
                 total_accuracy += acc
                 total_duration += duration
