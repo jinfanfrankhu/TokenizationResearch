@@ -1,0 +1,73 @@
+{
+    "average_accuracy": 0.9200292617133047,
+    "average_sentence_accuracy": 0.3830491888437318,
+    "classification_report": {
+        "B-DATE": {
+            "precision": 0.8968700783562359,
+            "recall": 0.8021978021978022,
+            "f1-score": 0.8467975002234365,
+            "support": 1729.0
+        },
+        "B-LOC": {
+            "precision": 0.779756887707651,
+            "recall": 0.7234464521815778,
+            "f1-score": 0.7502626145150556,
+            "support": 4538.0
+        },
+        "B-ORG": {
+            "precision": 0.7244460628211565,
+            "recall": 0.6775469831849654,
+            "f1-score": 0.6998341805251912,
+            "support": 2022.0
+        },
+        "B-PER": {
+            "precision": 0.712805140628963,
+            "recall": 0.7121460332319214,
+            "f1-score": 0.7122105816201054,
+            "support": 4273.0
+        },
+        "I-DATE": {
+            "precision": 0.5687415507504162,
+            "recall": 0.40608228980322003,
+            "f1-score": 0.460748600596484,
+            "support": 559.0
+        },
+        "I-LOC": {
+            "precision": 0.750316106476869,
+            "recall": 0.6715899218071243,
+            "f1-score": 0.7083198111111115,
+            "support": 1151.0
+        },
+        "I-ORG": {
+            "precision": 0.5544127382091895,
+            "recall": 0.4907862407862408,
+            "f1-score": 0.5196105614224286,
+            "support": 1628.0
+        },
+        "I-PER": {
+            "precision": 0.6548672904160879,
+            "recall": 0.6807055435565155,
+            "f1-score": 0.6666888724287052,
+            "support": 2778.0
+        },
+        "O": {
+            "precision": 0.9621276361405179,
+            "recall": 0.9734110758957734,
+            "f1-score": 0.9677348829125954,
+            "support": 82666.0
+        }
+    },
+    "training_duration_seconds": 31.567278146743774,
+    "average_epochs": 200,
+    "labels": [
+        "B-DATE",
+        "B-LOC",
+        "B-ORG",
+        "B-PER",
+        "I-DATE",
+        "I-LOC",
+        "I-ORG",
+        "I-PER",
+        "O"
+    ]
+}

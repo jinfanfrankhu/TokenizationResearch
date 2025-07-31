@@ -1,0 +1,73 @@
+{
+    "average_accuracy": 0.9273573907604424,
+    "average_sentence_accuracy": 0.3815363111615944,
+    "classification_report": {
+        "B-LOC": {
+            "precision": 0.8132385673646282,
+            "recall": 0.800398452387827,
+            "f1-score": 0.8067440212633927,
+            "support": 103902.0
+        },
+        "B-MISC": {
+            "precision": 0.708892109135267,
+            "recall": 0.566692152637798,
+            "f1-score": 0.6295188019651902,
+            "support": 14387.0
+        },
+        "B-ORG": {
+            "precision": 0.6905400613276343,
+            "recall": 0.6196623634558094,
+            "f1-score": 0.6526742293269837,
+            "support": 27189.0
+        },
+        "B-PER": {
+            "precision": 0.7202490160003026,
+            "recall": 0.7181456527238025,
+            "f1-score": 0.7191424410800882,
+            "support": 43487.0
+        },
+        "I-LOC": {
+            "precision": 0.7464879954909497,
+            "recall": 0.6391936490946392,
+            "f1-score": 0.6881604468696718,
+            "support": 11211.0
+        },
+        "I-MISC": {
+            "precision": 0.6597861476929664,
+            "recall": 0.4879132366392264,
+            "f1-score": 0.5605709003904958,
+            "support": 15306.0
+        },
+        "I-ORG": {
+            "precision": 0.8015725803023023,
+            "recall": 0.7382827799295009,
+            "f1-score": 0.7686268970062494,
+            "support": 22979.0
+        },
+        "I-PER": {
+            "precision": 0.719710495736672,
+            "recall": 0.6038258575197889,
+            "f1-score": 0.6560642284204502,
+            "support": 22740.0
+        },
+        "O": {
+            "precision": 0.9636645838101392,
+            "recall": 0.979830544820758,
+            "f1-score": 0.9716778715186117,
+            "support": 1095865.0
+        }
+    },
+    "training_duration_seconds": 448.4705617427826,
+    "average_epochs": 200,
+    "labels": [
+        "B-LOC",
+        "B-MISC",
+        "B-ORG",
+        "B-PER",
+        "I-LOC",
+        "I-MISC",
+        "I-ORG",
+        "I-PER",
+        "O"
+    ]
+}

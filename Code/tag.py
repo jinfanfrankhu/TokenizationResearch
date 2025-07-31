@@ -392,17 +392,12 @@ def embedding_similarity(emb1, emb2):
 def word2features_large_context(sentence_emb, tokens, i, window_size=5):
     features = {}
 
+    # Token identity (lowercased only — neutral)
     if i < len(tokens):
         token = tokens[i]
-        features.update({
-            'token': token.lower(),
-            'token_orig': token,
-            'token.isupper': token.isupper(),
-            'token.islower': token.islower(),
-            'token.istitle': token.istitle(),
-            'token.isdigit': token.isdigit(),
-        })
+        features['token.lower'] = token.lower()
 
+    # Embedding bucketization (dimensional distribution)
     if i < len(sentence_emb):
         embedding = sentence_emb[i]
         for dim_idx in range(min(15, len(embedding))):
@@ -414,25 +409,15 @@ def word2features_large_context(sentence_emb, tokens, i, window_size=5):
             else:
                 features[f'emb_dim_{dim_idx}'] = 'mid'
 
-    features.update({
-        'position': i,
-        'is_first': i == 0,
-        'is_last': i == len(tokens) - 1,
-        'position_ratio': round(i / len(tokens), 2) if len(tokens) > 0 else 0,
-    })
+    # Positional information (minimal bias)
+    features['position_ratio'] = round(i / len(tokens), 2) if len(tokens) > 0 else 0
 
+    # Contextual embedding similarity (structure-agnostic)
     for offset in range(-window_size, window_size + 1):
         if offset == 0:
             continue
         pos = i + offset
         if 0 <= pos < len(tokens):
-            context_token = tokens[pos]
-            features.update({
-                f'context_{offset}_token': context_token.lower(),
-                f'context_{offset}_len': len(context_token),
-                f'context_{offset}_isupper': context_token.isupper(),
-                f'context_{offset}_istitle': context_token.istitle(),
-            })
             if pos < len(sentence_emb) and i < len(sentence_emb):
                 norm1 = np.linalg.norm(sentence_emb[i])
                 norm2 = np.linalg.norm(sentence_emb[pos])
@@ -465,6 +450,7 @@ def train_crf_large_context(embeddings_by_sentence, tags_by_sentence, tokenized_
     
     print(f"Training CRF with context window size {window_size}...")
     
+    start_time = time.time()
     # Prepare training data
     X_train = []
     y_train = []
@@ -485,6 +471,8 @@ def train_crf_large_context(embeddings_by_sentence, tags_by_sentence, tokenized_
         # Create features with large context
         features = sent2features_large_context(sentence_emb[:min_len], tokens[:min_len], window_size)
         labels = sent2labels(sentence_tags[:min_len])
+
+        #print(f"Created features and labels for sentence {idx} of {len(train_idx)}")
         
         X_train.append(features)
         y_train.append(labels)
@@ -510,8 +498,8 @@ def train_crf_large_context(embeddings_by_sentence, tags_by_sentence, tokenized_
         
         X_test.append(features)
         y_test.append(labels)
-    
-    print(f"Training on {len(X_train)} sentences, testing on {len(X_test)} sentences")
+    end_time = time.time()
+    print(f"Created data in {end_time - start_time} seconds. Training on {len(X_train)} sentences, testing on {len(X_test)} sentences")
     
     if len(X_train) == 0 or len(X_test) == 0:
         print("No valid training or test data, skipping...")
@@ -527,7 +515,7 @@ def train_crf_large_context(embeddings_by_sentence, tags_by_sentence, tokenized_
         c2=0.05,  # L2 regularization - lower for more features  
         max_iterations=max_iterations,
         all_possible_transitions=True,
-        verbose=False  # Set to True if you want to see training progress
+        verbose=True  # Set to True if you want to see training progress
     )
     
     try:
@@ -542,6 +530,7 @@ def train_crf_large_context(embeddings_by_sentence, tags_by_sentence, tokenized_
     
     end_time = time.time()
     train_duration = end_time - start_time
+    print("CRF training completed in {:.2f} seconds".format(train_duration))
     
     # Predict
     print("Evaluating CRF...")
@@ -561,6 +550,9 @@ def train_crf_large_context(embeddings_by_sentence, tags_by_sentence, tokenized_
     
     # Calculate accuracy
     accuracy = sum(1 for true, pred in zip(flat_y_test, flat_y_pred) if true == pred) / len(flat_y_test)
+
+    correct_sents = sum(y_pred[i] == y_test[i] for i in range(len(y_test)))
+    sentence_accuracy = correct_sents / len(y_test)
     
     # Get unique labels
     unique_labels = sorted(set(flat_y_test))
@@ -582,9 +574,9 @@ def train_crf_large_context(embeddings_by_sentence, tags_by_sentence, tokenized_
         print("\nTop 10 positive features:")
         top_features = sorted(crf.state_features_, key=lambda x: x[1], reverse=True)[:10]
         for feature, weight in top_features:
-            print(f"  {feature}: {weight:.3f}")
+            print(f"  {feature}: {weight}")
     
-    return accuracy, class_report, None, unique_labels, train_duration, max_iterations, []
+    return accuracy, sentence_accuracy, class_report, None, unique_labels, train_duration, max_iterations, []
 
 # Modified integration function that slots into your existing code
 def train_crf_integration(embeddings_by_sentence, tags_by_sentence, tokenized_data, 
@@ -636,6 +628,7 @@ if __name__ == "__main__":
             merged_report = defaultdict(lambda: {"precision": 0, "recall": 0, "f1-score": 0, "support": 0})
 
             total_accuracy = 0.0
+            total_sentence_accuracy = 0.0
             total_duration = 0.0
             total_epochs = 0
 
@@ -645,7 +638,7 @@ if __name__ == "__main__":
                 valid_train_idx = [i for i in train_idx if i < len(embeddings_by_sentence)]
                 valid_test_idx = [i for i in test_idx if i < len(embeddings_by_sentence)]
                 
-                acc, report, conf_matrix, classes, duration, epochs, losses = train_crf_integration(
+                acc, sentence_acc, report, conf_matrix, classes, duration, epochs, losses = train_crf_integration(
                     embeddings_by_sentence,
                     tags_by_sentence,
                     tokenized_data,
@@ -655,6 +648,7 @@ if __name__ == "__main__":
                 )
 
                 total_accuracy += acc
+                total_sentence_accuracy += sentence_acc
                 total_duration += duration
                 total_epochs += epochs if isinstance(epochs, int) else 0
 
@@ -680,6 +674,7 @@ if __name__ == "__main__":
 
             results = {
                 "average_accuracy": total_accuracy / 3,
+                "average_sentence_accuracy": total_sentence_accuracy / 3,
                 "classification_report": final_report,
                 "training_duration_seconds": total_duration,
                 "average_epochs": total_epochs // 3 if total_epochs > 0 else "N/A",
