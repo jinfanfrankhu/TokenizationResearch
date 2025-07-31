@@ -1,6 +1,8 @@
 import json
 import os
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
 from adjustText import adjust_text 
@@ -87,19 +89,69 @@ def plot_confusion_matrix(data, lang, strat, save_dir):
 
     save_plot(fig, os.path.join(save_dir, "confusion_matrix.png"))
 
+# Compare across strategies by tag
+def plot_tag_comparison_across_strategies(lang, all_data, save_dir_base):
+    """
+    For a given language, creates one bar plot per NER tag, showing F1-scores across strategies.
+
+    Parameters:
+        lang (str): The language to process.
+        all_data (dict): Dictionary of {strategy: loaded_json_data}.
+        save_dir_base (str): Base directory to save plots.
+    """
+    # Collect all unique labels (NER tags) across all strategies
+    all_labels = set()
+    for data in all_data.values():
+        all_labels.update([
+            label for label in data["classification_report"].keys()
+            if label not in ["accuracy", "macro avg", "weighted avg"]
+        ])
+
+    for label in sorted(all_labels):
+        f1_scores = []
+        used_strategies = []
+
+        for strategy, data in all_data.items():
+            report = data["classification_report"]
+            if label in report:
+                f1 = report[label]["f1-score"]
+                f1_scores.append(f1)
+                used_strategies.append(strategy)
+
+        if not f1_scores:
+            continue  # Skip this label if it's missing from all strategies
+
+        # Sort strategies by F1-score
+        sorted_pairs = sorted(zip(f1_scores, used_strategies), reverse=True)
+        sorted_scores, sorted_strategies = zip(*sorted_pairs)
+
+        # Plot
+        fig, ax = plt.subplots(figsize=(8, 4))
+        ax.barh(sorted_strategies, sorted_scores, color='green')
+        ax.set_xlabel("F1-Score")
+        ax.set_title(f"{lang} - {label} F1 Score by Strategy")
+        ax.set_xlim(0, 1)
+        ax.invert_yaxis()
+
+        tag_safe = label.replace("/", "_").replace("\\", "_").replace(" ", "_")
+        os.makedirs(save_dir_base, exist_ok=True)
+        save_plot(fig, os.path.join(save_dir_base, f"{tag_safe}_f1_by_strategy.png"))
+
 if __name__ == "__main__":
     verbose = 1
-    # Loop through language and strategy combinations
     for lang in LANGS:
+        all_data = {}
         for strategy in STRATEGIES:
-            output_directory = rf"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}\{lang} Evaluation\Plots"  # Change this to your desired output folder
-            file_path = fr"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}\{lang} Evaluation\{lang}_{strategy}_NER_results.json"  # Path to input JSON file
+            file_path = fr"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}\{lang} Evaluation\{lang}_{strategy}_NER_results.json"
             data = load_classification_data(file_path)
-            if data:  # Only process if file exists and is loaded
-                save_dir = os.path.join(output_directory, strategy)  # Define where to save plots
-
+            if data:
+                all_data[strategy] = data
+                save_dir = os.path.join(rf"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}\{lang} Evaluation\Plots", strategy)
                 plot_f1_scores(data, lang, strategy, save_dir)
                 plot_precision_vs_recall(data, lang, strategy, save_dir)
-                plot_confusion_matrix(data, lang, strategy, save_dir)
-                if verbose == 1:
+                # plot_confusion_matrix(data, lang, strategy, save_dir)
+                if verbose:
                     print(f"Saved plots for {lang} - {strategy} in {save_dir}")
+        # Now call the new function to compare F1 scores per tag
+        plot_tag_comparison_across_strategies(lang, all_data, rf"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}\{lang} Evaluation\F1 By Strategy")
+
