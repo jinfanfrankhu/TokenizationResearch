@@ -3,9 +3,34 @@ import os
 import json
 import csv
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg')  # Use a non-interactive backend for saving plots
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+def plot_tagwise_f1_change_from_df(df, lang, save_dir):
+    os.makedirs(save_dir, exist_ok=True)
+    tags = df["Entity"].unique()
+
+    for tag in tags:
+        tag_df = df[df["Entity"] == tag].copy()
+
+        if tag_df.empty:
+            continue
+
+        # Sort strategies by F1 change
+        tag_df = tag_df.sort_values(by="F1 Change", ascending=False)
+
+        plt.figure(figsize=(8, 4))
+        plt.barh(tag_df["Strategy"], tag_df["F1 Change"], color="purple")
+        plt.axvline(0, color="black", linestyle="--", linewidth=1)
+        plt.xlabel("ΔF1")
+        plt.title(f"{lang} - {tag} F1 Change by Strategy")
+        plt.tight_layout()
+
+        tag_safe = tag.replace("/", "_").replace("\\", "_").replace(" ", "_")
+        plt.savefig(os.path.join(save_dir, f"{tag_safe}_delta_f1_by_strategy.png"), dpi=300)
+        plt.close()
 
 def compare_classification_reports(old_json_path, new_json_path):
     with open(old_json_path, 'r', encoding='utf-8') as f:
@@ -102,8 +127,8 @@ if __name__ == "__main__":
     for lang in LANGS:
         for strategy in STRATEGIES:
             # Check if old file exists
-            if os.path.exists(f"C:\\Users\\jinfa\\Desktop\\Research Dr. Mani\\{lang} Run {RUNNUMBER}\\{lang} Evaluation\\{lang}_{strategy}_NER_results.json") and os.path.exists(f"C:\\Users\\jinfa\\Desktop\\Research Dr. Mani\\{lang} Run {RUNNUMBER-1}\\{lang} Evaluation\\{lang}_{strategy}_POS_results.json"):
-                old_json_path = f"C:\\Users\\jinfa\\Desktop\\Research Dr. Mani\\{lang} Run {RUNNUMBER-1}\\{lang} Evaluation\\{lang}_{strategy}_POS_results.json"
+            if os.path.exists(f"C:\\Users\\jinfa\\Desktop\\Research Dr. Mani\\{lang} Run {RUNNUMBER}\\{lang} Evaluation\\{lang}_{strategy}_NER_results.json") and os.path.exists(f"C:\\Users\\jinfa\\Desktop\\Research Dr. Mani\\{lang} Run {RUNNUMBER-1}\\{lang} Evaluation\\{lang}_{strategy}_NER_results.json"):
+                old_json_path = f"C:\\Users\\jinfa\\Desktop\\Research Dr. Mani\\{lang} Run {RUNNUMBER-1}\\{lang} Evaluation\\{lang}_{strategy}_NER_results.json"
                 new_json_path = f"C:\\Users\\jinfa\\Desktop\\Research Dr. Mani\\{lang} Run {RUNNUMBER}\\{lang} Evaluation\\{lang}_{strategy}_NER_results.json"
             else:
                 continue
@@ -124,3 +149,7 @@ if __name__ == "__main__":
         output_base_dir = f"C:\\Users\\jinfa\\Desktop\\Research Dr. Mani\\{lang} Run {RUNNUMBER}\\{lang} Changes\\Plots"
         os.makedirs(output_base_dir, exist_ok=True)
         generate_language_specific_plots(full_df, lang, output_base_dir)
+
+        tagwise_output_dir = os.path.join(output_base_dir, "Tagwise F1 Change")
+        plot_tagwise_f1_change_from_df(full_df[full_df["Language"] == lang], lang, tagwise_output_dir)
+
