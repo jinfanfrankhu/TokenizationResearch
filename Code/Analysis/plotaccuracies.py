@@ -44,17 +44,22 @@ def plot_f1_scores(data, lang, strat, save_dir):
 def plot_precision_vs_recall(data, lang, strat, save_dir):
     classification_report = data["classification_report"]
 
-    # Only include labels that are not summary averages and that have non-zero precision or recall
     labels = []
     precision = []
     recall = []
+    has_failed_class = False
+
     for label, scores in classification_report.items():
         if label in ["accuracy", "macro avg", "weighted avg"]:
             continue
-        if scores["precision"] > 0 or scores["recall"] > 0:
+        p = scores.get("precision", 0.0)
+        r = scores.get("recall", 0.0)
+        if p == 0.0 and r == 0.0:
+            has_failed_class = True
+        if p > 0.0 or r > 0.0:
             labels.append(label)
-            precision.append(scores["precision"])
-            recall.append(scores["recall"])
+            precision.append(p)
+            recall.append(r)
 
     fig, ax = plt.subplots(figsize=(6, 6))
     ax.scatter(precision, recall, color='red', s=100, alpha=0.7)
@@ -62,8 +67,10 @@ def plot_precision_vs_recall(data, lang, strat, save_dir):
     texts = []
     for i, label in enumerate(labels):
         texts.append(ax.text(precision[i], recall[i], label, fontsize=9))
-    ax.scatter(0, 0, color="black", s=100, alpha=0.7)
-    ax.text(0.02, 0.02, "Failed Classes", fontsize=9)
+
+    if has_failed_class:
+        ax.scatter(0, 0, color="black", s=100, alpha=0.7)
+        ax.text(0.02, 0.02, "Failed Classes", fontsize=9)
 
     adjust_text(texts, arrowprops=dict(arrowstyle="->", color='gray', lw=0.5))
 
@@ -137,6 +144,111 @@ def plot_tag_comparison_across_strategies(lang, all_data, save_dir_base):
         os.makedirs(save_dir_base, exist_ok=True)
         save_plot(fig, os.path.join(save_dir_base, f"{tag_safe}_f1_by_strategy.png"))
 
+def plot_average_accuracy_bar(all_data, lang, save_dir):
+    strategies = []
+    accuracies = []
+
+    for strategy, data in all_data.items():
+        strategies.append(strategy)
+        accuracies.append(data.get("average_accuracy", 0.0))
+
+    sorted_data = sorted(zip(accuracies, strategies), reverse=True)
+    accuracies, strategies = zip(*sorted_data)
+
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.barh(strategies, accuracies, color='darkblue')
+    ax.set_xlabel("Token-Level Accuracy")
+    ax.set_title(f"{lang} - Accuracy by Strategy")
+    ax.set_xlim(0, 1)
+    ax.invert_yaxis()
+
+    save_plot(fig, os.path.join(save_dir, "accuracy_by_strategy.png"))
+
+def plot_sentence_accuracy_bar(all_data, lang, save_dir):
+    strategies = []
+    sent_accuracies = []
+
+    for strategy, data in all_data.items():
+        strategies.append(strategy)
+        sent_accuracies.append(data.get("average_sentence_accuracy", 0.0))
+
+    sorted_data = sorted(zip(sent_accuracies, strategies), reverse=True)
+    sent_accuracies, strategies = zip(*sorted_data)
+
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.barh(strategies, sent_accuracies, color='orange')
+    ax.set_xlabel("Sentence-Level Accuracy")
+    ax.set_title(f"{lang} - Sentence Accuracy by Strategy")
+    ax.set_xlim(0, 1)
+    ax.invert_yaxis()
+
+    save_plot(fig, os.path.join(save_dir, "sentence_accuracy_by_strategy.png"))
+
+def plot_macro_f1_bar(all_data, lang, save_dir):
+    strategies = []
+    macro_f1s = []
+
+    for strategy, data in all_data.items():
+        report = data["classification_report"]
+        # Collect all valid tags
+        tags = [tag for tag in report if tag not in ["accuracy", "macro avg", "weighted avg"]]
+        f1s = [report[tag]["f1-score"] for tag in tags]
+        macro_f1 = np.mean(f1s) if f1s else 0.0
+        strategies.append(strategy)
+        macro_f1s.append(macro_f1)
+
+    sorted_data = sorted(zip(macro_f1s, strategies), reverse=True)
+    macro_f1s, strategies = zip(*sorted_data)
+
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.barh(strategies, macro_f1s, color='green')
+    ax.set_xlabel("Unweighted Macro F1")
+    ax.set_title(f"{lang} - Macro F1 by Strategy")
+    ax.set_xlim(0, 1)
+    ax.invert_yaxis()
+
+    save_plot(fig, os.path.join(save_dir, "macro_f1_by_strategy.png"))
+
+def plot_accuracy_vs_training_time(all_data, lang, save_dir):
+    """
+    Plots average accuracy vs training duration for each strategy.
+
+    Parameters:
+        all_data (dict): Dictionary of {strategy: loaded_json_data}.
+        lang (str): Language name.
+        save_dir (str): Directory to save the plot.
+    """
+    strategies = []
+    training_durations = []
+    accuracies = []
+
+    for strategy, data in all_data.items():
+        training_time = data.get("training_duration_seconds", None)
+        accuracy = data.get("average_accuracy", None)
+
+        if training_time is not None and accuracy is not None:
+            strategies.append(strategy)
+            training_durations.append(training_time)
+            accuracies.append(accuracy)
+
+    if not training_durations:
+        print("No training duration data available to plot.")
+        return
+
+    fig, ax = plt.subplots(figsize=(8, 6))
+    scatter = ax.scatter(training_durations, accuracies, color='purple', s=100, alpha=0.8)
+
+    # Annotate each point with strategy name
+    for i, strategy in enumerate(strategies):
+        ax.annotate(strategy, (training_durations[i], accuracies[i]), fontsize=9, xytext=(5, 5), textcoords='offset points')
+
+    ax.set_xlabel("Training Duration (seconds)")
+    ax.set_ylabel("Average Accuracy")
+    ax.set_title(f"{lang} - Accuracy vs Training Time")
+    ax.grid(True)
+
+    save_plot(fig, os.path.join(save_dir, "accuracy_vs_training_time.png"))
+
 if __name__ == "__main__":
     verbose = 1
     for lang in LANGS:
@@ -154,4 +266,9 @@ if __name__ == "__main__":
                     print(f"Saved plots for {lang} - {strategy} in {save_dir}")
         # Now call the new function to compare F1 scores per tag
         plot_tag_comparison_across_strategies(lang, all_data, rf"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}\{lang} Evaluation\F1 By Strategy")
+        plot_average_accuracy_bar(all_data, lang, save_dir=os.path.join(rf"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}\{lang} Evaluation\Plots"))
+        plot_sentence_accuracy_bar(all_data, lang, save_dir=os.path.join(rf"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}\{lang} Evaluation\Plots"))
+        plot_macro_f1_bar(all_data, lang, save_dir=os.path.join(rf"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}\{lang} Evaluation\Plots"))
+        plot_accuracy_vs_training_time(all_data, lang, save_dir=os.path.join(rf"C:\Users\jinfa\Desktop\Research Dr. Mani\{lang} Run {RUNNUMBER}\{lang} Evaluation\Plots"))
+
 
